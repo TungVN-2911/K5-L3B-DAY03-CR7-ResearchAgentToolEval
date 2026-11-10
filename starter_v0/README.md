@@ -8,4 +8,14 @@ Toàn bộ source code của lab nằm trong folder này. Chạy mọi lệnh t�
 - Output: `runs/*.json` (kết quả eval), `transcripts/*.transcript.json` (chat live), `analysis/*.csv` (nếu chạy `scripts/parse_runs.py`).
 - File học viên được sửa: `artifacts/system_prompt.md`, `artifacts/tools.yaml`, `artifacts/version_log.csv`, `data/eval_group.json`, `tools/` (thêm tool mới và đăng ký trong `tools/__init__.py`), `tests/test_tools_todo.py`, code UI và `requirements.txt`. Không sửa nội dung case trong `data/eval_base.json`.
 
+## Chạy giao diện Streamlit
+
+Cài dependencies từ `starter_v0/` bằng `python -m pip install -r requirements.txt`, cấu hình API key trong `starter_v0/.env`, sau đó chạy từ thư mục gốc dự án:
+
+```powershell
+streamlit run app.py
+```
+
+Trong giao diện, chọn provider; để trống model để dùng model mặc định. Agent dùng prompt và khai báo tool trong `starter_v0/artifacts/`.
+
 Chi tiết từng bước xem [README.md](../README.md) ở root; cấu hình API key xem [docs/TOOL-SETUP.md](../docs/TOOL-SETUP.md).
