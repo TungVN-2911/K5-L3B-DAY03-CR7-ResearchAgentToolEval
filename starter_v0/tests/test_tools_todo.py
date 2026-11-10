@@ -10,10 +10,15 @@ Rules:
 """
 from __future__ import annotations
 
+import importlib
+
 import pytest
 
 from conftest import FakeResponse  # noqa: F401  (you will need it)
 from tools import TOOL_FUNCTIONS  # noqa: F401
+from tools.source_audit.tool import source_audit
+
+source_audit_module = importlib.import_module("tools.source_audit.tool")
 
 TODO = "TODO CP3 (student): implement this test"
 
@@ -104,19 +109,41 @@ def test_policy_instruction_like_lines_go_to_untrusted_text() -> None:
     pytest.skip(TODO)
 
 
-# ---------------- YOUR NEW TOOL(S) ----------------
-# Write at least 3 tests per tool your team adds:
-#   1. happy path (mocked if it calls an API)
-#   2. bad / missing input from the model (empty string, wrong type, out-of-enum value)
-#   3. failure path (missing key, HTTP error, timeout) -> returns error dict, does not raise
+# ---------------- source_audit ----------------
 
-def test_my_new_tool_happy_path() -> None:
-    pytest.skip(TODO)
+def test_source_audit_detects_duplicate_urls_and_counts_sources() -> None:
+    result = source_audit(items=[
+        {"url": "https://www.example.com/story/#top", "source": "Example"},
+        {"url": "https://example.com/story", "source": "Example"},
+        {"url": "https://news.test/article"},
+    ])
+
+    assert result == {
+        "tool": "source_audit",
+        "item_count": 3,
+        "unique_url_count": 2,
+        "duplicate_urls": [{"url": "https://example.com/story", "indices": [0, 1]}],
+        "source_counts": {"example": 2, "news.test": 1},
+    }
 
 
-def test_my_new_tool_bad_input_from_model() -> None:
-    pytest.skip(TODO)
+def test_source_audit_rejects_bad_items_from_model() -> None:
+    result = source_audit(items=[{"url": "https://example.com"}, "not an object"])
+
+    assert result["tool"] == "source_audit"
+    assert result["error"] == "TypeError"
+    assert "each item must be an object" in result["message"]
 
 
-def test_my_new_tool_failure_returns_error_dict() -> None:
-    pytest.skip(TODO)
+def test_source_audit_unexpected_failure_returns_error_dict(monkeypatch) -> None:
+    def fail_audit(items):
+        raise RuntimeError("audit failed")
+
+    monkeypatch.setattr(source_audit_module, "_audit_sources", fail_audit)
+    result = source_audit(items=[])
+
+    assert result == {
+        "tool": "source_audit",
+        "error": "RuntimeError",
+        "message": "audit failed",
+    }
