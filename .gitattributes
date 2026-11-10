@@ -1,0 +1,5 @@
+# Giữ nguyên byte của prompt/tools: hash trong version_log.csv và run JSON tính trên byte của file,
+# nên git không được đổi xuống dòng (CRLF/LF) của các file này.
+starter_v0/artifacts/system_prompt.md -text
+starter_v0/artifacts/tools.yaml -text
+starter_v0/artifacts/versions/** -text

@@ -154,6 +154,13 @@ def quick_replies(pending: dict[str, Any] | None) -> list[str]:
     return []
 
 
+def find_empty_conversation(conversations: dict[str, dict[str, Any]], prefer: str | None = None) -> str | None:
+    """ID một cuộc trò chuyện chưa có tin nhắn (ưu tiên `prefer`), để tái sử dụng thay vì tạo thêm cuộc rỗng."""
+    if prefer in conversations and not conversations[prefer].get("messages"):
+        return prefer
+    return next((cid for cid, conv in conversations.items() if not conv.get("messages")), None)
+
+
 def conversation_title(text: str, limit: int = 42) -> str:
     text = " ".join(text.split())
     return text if len(text) <= limit else text[: limit - 1].rstrip() + "…"
@@ -204,6 +211,58 @@ def record_turn(path: Path, transcript: dict[str, Any], user_text: str, result: 
     transcript["turns"].append(turn)
     write_transcript(path, transcript)
     return turn
+
+
+# --------------------------------------------------------------------------- version snapshots
+
+VERSIONS_DIR = ARTIFACTS_DIR / "versions"
+
+
+@dataclass
+class AgentVersion:
+    version: str
+    prompt_path: Path
+    tools_path: Path
+    artifact_version: str
+    hash_matches_log: bool | None  # None = version không có trong version_log
+    hypothesis: str = ""
+    changed_artifact: str = ""
+    base_accuracy: float | None = None
+
+
+def list_versions(versions_dir: Path = VERSIONS_DIR, log_path: Path = ARTIFACTS_DIR / "version_log.csv",
+                  runs_dir: Path = RUNS_DIR) -> list[AgentVersion]:
+    """Các snapshot vN/ (system_prompt.md + tools.yaml), kèm kiểm tra hash với version_log và điểm base."""
+    log = {row.get("version"): row for row in read_version_log(log_path)}
+    scores = {v: run["summary"].get("case_accuracy") for v, run in load_runs(runs_dir, "base").items()}
+    found: list[AgentVersion] = []
+    if not versions_dir.is_dir():
+        return found
+    for folder in versions_dir.iterdir():
+        prompt, tools = folder / "system_prompt.md", folder / "tools.yaml"
+        if not (folder.is_dir() and prompt.is_file() and tools.is_file()):
+            continue
+        art = build_artifact_version(folder.name, prompt, tools)
+        row = log.get(folder.name)
+        matches = None if row is None else (
+            art.prompt_hash.startswith(row.get("prompt_hash", "")) and art.tools_hash.startswith(row.get("tools_hash", ""))
+        )
+        found.append(AgentVersion(
+            version=folder.name, prompt_path=prompt, tools_path=tools, artifact_version=art.artifact_version,
+            hash_matches_log=matches, hypothesis=(row or {}).get("hypothesis", ""),
+            changed_artifact=(row or {}).get("changed_artifact", ""), base_accuracy=scores.get(folder.name),
+        ))
+    return sorted(found, key=lambda v: version_sort_key(v.version))
+
+
+def prompt_diff(old_path: Path, new_path: Path) -> str:
+    """Unified diff giữa hai prompt (để hiển thị version khác nhau chỗ nào)."""
+    import difflib
+
+    old = old_path.read_text(encoding="utf-8").splitlines()
+    new = new_path.read_text(encoding="utf-8").splitlines()
+    return "\n".join(difflib.unified_diff(old, new, fromfile=old_path.parent.name, tofile=new_path.parent.name,
+                                          lineterm="", n=1))
 
 
 # --------------------------------------------------------------------------- versions & benchmark

@@ -21,6 +21,8 @@ Trong giao diện, chọn provider; để trống model để dùng model mặc 
 Thanh điều hướng trên cùng có 3 trang:
 
 - **Chat** (`/`): nhiều cuộc trò chuyện (lịch sử ở sidebar), thẻ câu hỏi mẫu, tiến trình gọi tool hiện trực tiếp, nút trả lời nhanh *Có / Không* khi agent xin xác nhận, *Tạo lại* và *Sao chép*. Lỗi tool/provider hiển thị rõ. Mỗi cuộc trò chuyện tự lưu `starter_v0/transcripts/ui_*.transcript.json` (tải về ở sidebar).
+- **So sánh version** (`/compare`): chọn 2 version (mặc định v0 vs v6), gửi cùng một câu hỏi cho cả hai và xem song song tool được gọi, tham số, câu hỏi lại/xác nhận; có diff prompt giữa hai version. Ở trang Chat cũng chọn được version để chat riêng.
+  Prompt/tools từng version lưu ở `artifacts/versions/vN/` (hash khớp `version_log.csv`).
 - **Benchmark** (`/benchmark`): so sánh các version (mặc định v0–v3, chọn thêm v4–v6), suite base/group: KPI so với v0, biểu đồ 4 metric, bảng số liệu + Δ + run file, ma trận pass/fail từng case, giả thuyết từ `version_log.csv`. Chỉ dùng run hợp lệ.
 - **Công cụ** (`/tools`): tool và tham số đọc từ `artifacts/tools.yaml`.
 

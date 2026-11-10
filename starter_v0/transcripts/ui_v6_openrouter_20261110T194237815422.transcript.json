@@ -1,0 +1,35 @@
+{
+  "transcript_id": "ui_v6_openrouter_20261110T194237815422",
+  "source": "streamlit_ui",
+  "version": "v6",
+  "artifact_version": "v6+p5a4f316905ed+tf0632d419cd7",
+  "prompt_hash": "5a4f316905ed25672f3d3047e4a3dd13a883ccbb85e379bb05e56198eaae15ab",
+  "tools_hash": "f0632d419cd7ddd37ccdfb523d619bc1c77d2858fe9cc475f040a49d84d5ec95",
+  "provider": "openrouter",
+  "model": "openai/gpt-4o-mini",
+  "system_prompt": "D:\\Vin AI\\K5-L3B-DAY03-CR7-ResearchAgentToolEval\\starter_v0\\artifacts\\system_prompt.md",
+  "tools": "D:\\Vin AI\\K5-L3B-DAY03-CR7-ResearchAgentToolEval\\starter_v0\\artifacts\\tools.yaml",
+  "history_window": 5,
+  "max_tool_rounds": 4,
+  "created_at": "2026-11-10T19:42:37",
+  "updated_at": "2026-11-10T19:42:45",
+  "turns": [
+    {
+      "turn_index": 1,
+      "started_at": "2026-11-10T19:42:37",
+      "user": "tóm tắt 5 tweet",
+      "status": "answered",
+      "assistant_text": "Bạn có thể cho biết tài khoản nào mà bạn muốn tóm tắt 5 tweet gần đây?",
+      "rounds": [
+        {
+          "round": 1,
+          "assistant_text": "Bạn có thể cho biết tài khoản nào mà bạn muốn tóm tắt 5 tweet gần đây?",
+          "tool_calls": [],
+          "tool_results": []
+        }
+      ],
+      "tool_events": [],
+      "ended_at": "2026-11-10T19:42:45"
+    }
+  ]
+}

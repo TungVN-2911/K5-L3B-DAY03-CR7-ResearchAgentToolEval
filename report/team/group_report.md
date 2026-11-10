@@ -28,9 +28,10 @@ cd ..
 streamlit run app.py                         # mở http://localhost:8501
 ```
 
-API key đọc từ `starter_v0/.env` (OpenRouter + Tavily + Firecrawl + RapidAPI). UI gồm 3 tab:
+API key đọc từ `starter_v0/.env` (OpenRouter + Tavily + Firecrawl + RapidAPI). UI gồm 4 trang (thanh điều hướng cố định trên cùng):
 
 - **💬 Chat** — nhiều cuộc trò chuyện (lịch sử ở sidebar), gợi ý câu hỏi mẫu, hiển thị tiến trình gọi tool trực tiếp, nút trả lời nhanh **Có / Không** khi agent xin xác nhận, nút 🔄 tạo lại và 📋 sao chép, lỗi tool/provider hiện rõ (không che), mỗi cuộc trò chuyện tự lưu transcript vào `starter_v0/transcripts/ui_*.transcript.json` và tải về được.
+- **⇄ So sánh version** — chọn 2 version (vd v0 vs v6), gửi cùng một câu hỏi và xem song song cách mỗi version chọn tool, tham số, hỏi lại, xác nhận; kèm diff prompt. Snapshot prompt/tools từng version ở `starter_v0/artifacts/versions/` (SHA-256 khớp `version_log.csv`). Trang Chat cũng chọn được version.
 - **📊 Benchmark** — so sánh v0–v6 (chọn version, chọn suite base/group): KPI so với v0, biểu đồ 4 metric theo version, bảng số liệu kèm Δ và run file, ma trận pass/fail từng case, giả thuyết từ `version_log.csv`. Chỉ lấy run hợp lệ.
 - **🧰 Công cụ** — danh sách tool và tham số đọc trực tiếp từ `tools.yaml`.
 
