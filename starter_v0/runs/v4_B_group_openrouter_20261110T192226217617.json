@@ -1,0 +1,780 @@
+{
+  "run_id": "v4_B_group_openrouter_20261110T192226217617",
+  "version": "v4",
+  "artifact_version": "v4+pd4acd5bb4523+tf0632d419cd7",
+  "prompt_hash": "d4acd5bb4523e4d3ac5099805878e3ee047047f03c8cb68406956e7bf6ea9843",
+  "tools_hash": "f0632d419cd7ddd37ccdfb523d619bc1c77d2858fe9cc475f040a49d84d5ec95",
+  "phase": "B",
+  "suite": "group",
+  "provider": "openrouter",
+  "model": "openai/gpt-4o-mini",
+  "system_prompt": "D:\\Vin AI\\K5-L3B-DAY03-CR7-ResearchAgentToolEval\\starter_v0\\artifacts\\system_prompt.md",
+  "tools": "D:\\Vin AI\\K5-L3B-DAY03-CR7-ResearchAgentToolEval\\starter_v0\\artifacts\\tools.yaml",
+  "eval_cases": "data\\eval_group.json",
+  "dataset_id": "day03_v2_research_group",
+  "dataset_role": "group",
+  "description": "CR7 — 10 case do Nguyễn Trọng Khiêm (Người 3) soạn với hỗ trợ Codex: 5 single-turn và 5 multi-turn. Đo routing, bộ lọc tìm kiếm, thiếu dữ liệu, xác nhận/hủy gửi và tool mới source_audit. Case có items dạng object được kiểm tra thêm thủ công trong run vì scorer hiện chưa so sánh được danh sách nhiều object.",
+  "generated_at": "2026-11-10T19:22:26",
+  "summary": {
+    "total_cases": 10,
+    "measured_cases": 10,
+    "provider_error_cases": 0,
+    "passed_cases": 10,
+    "case_accuracy": 1.0,
+    "tool_routing_accuracy": 1.0,
+    "argument_accuracy": 1.0,
+    "multiturn_accuracy": 1.0,
+    "failure_counts": {},
+    "observed_mismatch_counts": {}
+  },
+  "results": [
+    {
+      "id": "G01_single_source_audit_duplicates",
+      "phase": "B",
+      "suite": "group",
+      "case_suite": "group",
+      "is_multiturn": false,
+      "metadata": {
+        "what_it_tests": "Route tới tool mới khi đã có research items; không tìm kiếm hoặc format thay cho audit.",
+        "manual_review": "Đối chiếu đủ 3 URL nguyên bản; item_count=3, unique_url_count=2, duplicate indices=[0,1], source_counts={example:2,research.example.net:1}. Scorer chỉ chấm tên tool ở case này."
+      },
+      "input": "Kiểm tra URL trùng và đếm số item theo nguồn trong danh sách đã thu thập sau, giữ nguyên cả link trùng và không tìm thêm dữ liệu: [{\"url\":\"https://www.example.org/agents/#overview\",\"source\":\"Example\"},{\"url\":\"https://example.org/agents\",\"source\":\"Example\"},{\"url\":\"https://research.example.net/report\"}].",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "source_audit",
+            "args": {}
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "source_audit",
+            "args": {
+              "items": [
+                {
+                  "url": "https://www.example.org/agents/#overview",
+                  "source": "Example"
+                },
+                {
+                  "url": "https://example.org/agents",
+                  "source": "Example"
+                },
+                {
+                  "url": "https://research.example.net/report"
+                }
+              ]
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_tool",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "source_audit",
+          "args": {
+            "items": [
+              {
+                "url": "https://www.example.org/agents/#overview",
+                "source": "Example"
+              },
+              {
+                "url": "https://example.org/agents",
+                "source": "Example"
+              },
+              {
+                "url": "https://research.example.net/report"
+              }
+            ]
+          },
+          "result": {
+            "tool": "source_audit",
+            "item_count": 3,
+            "unique_url_count": 2,
+            "duplicate_urls": [
+              {
+                "url": "https://example.org/agents",
+                "indices": [
+                  0,
+                  1
+                ]
+              }
+            ],
+            "source_counts": {
+              "example": 2,
+              "research.example.net": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "G02_single_web_news_year_limit",
+      "phase": "B",
+      "suite": "group",
+      "case_suite": "group",
+      "is_multiturn": false,
+      "metadata": {
+        "what_it_tests": "Ánh xạ năm nay sang year, giữ query tiếng Anh và số kết quả; không dùng timeframe mặc định week."
+      },
+      "input": "Tìm trên web đúng 2 tin tức trong năm nay với từ khóa chính xác bằng tiếng Anh là 'multimodal agents'.",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "lookup",
+            "args": {
+              "query": "multimodal agents",
+              "topic": "news",
+              "timeframe": "year",
+              "max_results": 2
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "lookup",
+            "args": {
+              "query": "multimodal agents",
+              "topic": "news",
+              "timeframe": "year",
+              "max_results": 2
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_arg_value",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "lookup",
+          "args": {
+            "query": "multimodal agents",
+            "topic": "news",
+            "timeframe": "year",
+            "max_results": 2
+          },
+          "result": {
+            "tool": "web_search",
+            "query": "multimodal agents",
+            "topic": "news",
+            "timeframe": "year",
+            "items": [
+              {
+                "title": "MoMA: a mixture-of-multimodal-agents architecture for enhancing clinical prediction modelling | npj Digital Medicine",
+                "url": "https://www.nature.com/articles/s41746-025-02219-4",
+                "source": "nature.com",
+                "summary": "In this work, we introduced Mixture-of-Multimodal-Agents (MoMA), a flexible architecture designed to harness the power of pretrained LLMs for clinical prediction tasks involving multimodal medical data. MoMA adopts a modular, plug-and-play design that enables state-of-the-art LLMs to serve as specialist agents for processing specific data types, allowing them to be easily swapped or extended based on task requirements. The proposed architecture was validated on three clinical tasks involving [...] Multimodal electronic health record (EHR) data provide richer, complementary insights into patient health compared to single-modality data. However, effectively integrating diverse data modalities for clinical prediction modeling remains challenging due to the substantial data requirements. We introduce a novel architecture, Mixture-of-Multimodal-Agents (MoMA), designed to leverage multiple large language model (LLM) agents for clinical prediction tasks using multimodal EHR data. MoMA employs [...] data. MoMA employs specialized LLM agents (“specialist agents”) to convert non-textual modalities, such as medical images and laboratory results, into structured textual summaries. These summaries, together with clinical notes, are combined by another LLM (“aggregator agent”) to generate a unified multimodal summary, which is then used by a third LLM (“predictor agent”) to produce clinical predictions. Evaluating MoMA with different modality combinations and prediction settings, MoMA",
+                "score": 0.8742601
+              },
+              {
+                "title": "Automatic Prompt Optimization for Multimodal Vision Agents: A Self-Driving Car Example | Towards Data Science",
+                "url": "https://towardsdatascience.com/automatic-prompt-optimization-for-multimodal-vision-agents-a-self-driving-car-example",
+                "source": "towardsdatascience.com",
+                "summary": "## Optimizing Multimodal Agents\n\nMultimodal AI agents, those that can process text and images (or other media), are rapidly entering real-world domains like autonomous driving, healthcare, and robotics. In these settings, we have traditionally used vision models like CNNs; in the post-GPT era, we can use vision and multimodal language models that leverage human instructions in the form of prompts, rather than task-oriented, highly specific vision models.",
+                "score": 0.8338803
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "G03_single_audit_missing_items",
+      "phase": "B",
+      "suite": "group",
+      "case_suite": "group",
+      "is_multiturn": false,
+      "metadata": {
+        "what_it_tests": "Phải xin items còn thiếu cho tool mới; không tự dựng danh sách, không lấy items=[] làm dữ liệu chưa được cung cấp."
+      },
+      "input": "Kiểm tra xem danh sách nguồn nghiên cứu của tôi có link trùng không. Tôi chưa gửi danh sách hoặc URL nào cho bạn.",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "clarify",
+            "args": {
+              "response_type": "text"
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "clarify",
+            "args": {
+              "question": "Bạn vui lòng cung cấp danh sách nguồn nghiên cứu mà bạn muốn kiểm tra không?",
+              "response_type": "text"
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "missing_info",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "clarify",
+          "args": {
+            "question": "Bạn vui lòng cung cấp danh sách nguồn nghiên cứu mà bạn muốn kiểm tra không?",
+            "response_type": "text"
+          },
+          "result": {
+            "tool": "ask_user",
+            "question": "Bạn vui lòng cung cấp danh sách nguồn nghiên cứu mà bạn muốn kiểm tra không?",
+            "response_type": "text",
+            "options": [],
+            "awaiting_user": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "G04_single_send_draft_confirmation",
+      "phase": "B",
+      "suite": "group",
+      "case_suite": "group",
+      "is_multiturn": false,
+      "metadata": {
+        "what_it_tests": "Đã có nội dung cụ thể vẫn phải hỏi xác nhận trước send; tách khỏi trường hợp thiếu nội dung của R12 base."
+      },
+      "input": "Gửi nguyên văn bản nháp 'Bản tin thử nghiệm CR7: đã tổng hợp 2 nguồn về research agent.' lên private channel Telegram của nhóm. Đây là yêu cầu gửi mới, trước đó tôi chưa trả lời câu hỏi xác nhận nào.",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "clarify",
+            "args": {
+              "response_type": "yes_no"
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "clarify",
+            "args": {
+              "question": "Bạn xác nhận muốn gửi nguyên văn bản nháp 'Bản tin thử nghiệm CR7: đã tổng hợp 2 nguồn về research agent.' lên private channel Telegram của nhóm chứ?",
+              "response_type": "yes_no"
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_boundary",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "clarify",
+          "args": {
+            "question": "Bạn xác nhận muốn gửi nguyên văn bản nháp 'Bản tin thử nghiệm CR7: đã tổng hợp 2 nguồn về research agent.' lên private channel Telegram của nhóm chứ?",
+            "response_type": "yes_no"
+          },
+          "result": {
+            "tool": "ask_user",
+            "question": "Bạn xác nhận muốn gửi nguyên văn bản nháp 'Bản tin thử nghiệm CR7: đã tổng hợp 2 nguồn về research agent.' lên private channel Telegram của nhóm chứ?",
+            "response_type": "yes_no",
+            "options": [],
+            "awaiting_user": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "G05_single_format_existing_items",
+      "phase": "B",
+      "suite": "group",
+      "case_suite": "group",
+      "is_multiturn": false,
+      "metadata": {
+        "what_it_tests": "Phân biệt format dữ liệu đã có với fetch/lookup/source_audit; chọn template thread.",
+        "manual_review": "Đối chiếu 2 items, URL và summary nguyên bản; item_count=2 và markdown có 1/, 2/. Scorer chỉ chấm routing và template."
+      },
+      "input": "Tạo thread được đánh số từ đúng 2 research items sau, chỉ trình bày dữ liệu có sẵn, không tìm hoặc đọc thêm URL: [{\"title\":\"Agent routing\",\"url\":\"https://example.org/routing\",\"summary\":\"Đo lựa chọn tool.\"},{\"title\":\"Source coverage\",\"url\":\"https://example.net/coverage\",\"summary\":\"Đếm số nguồn nghiên cứu.\"}].",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "format",
+            "args": {
+              "template": "thread"
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "format",
+            "args": {
+              "items": [
+                {
+                  "title": "Agent routing",
+                  "url": "https://example.org/routing",
+                  "summary": "Đo lựa chọn tool."
+                },
+                {
+                  "title": "Source coverage",
+                  "url": "https://example.net/coverage",
+                  "summary": "Đếm số nguồn nghiên cứu."
+                }
+              ],
+              "template": "thread"
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_tool",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "format",
+          "args": {
+            "items": [
+              {
+                "title": "Agent routing",
+                "url": "https://example.org/routing",
+                "summary": "Đo lựa chọn tool."
+              },
+              {
+                "title": "Source coverage",
+                "url": "https://example.net/coverage",
+                "summary": "Đếm số nguồn nghiên cứu."
+              }
+            ],
+            "template": "thread"
+          },
+          "result": {
+            "tool": "render_digest",
+            "template": "thread",
+            "markdown": "1/ Đo lựa chọn tool. - [example.org](https://example.org/routing)\n\n2/ Đếm số nguồn nghiên cứu. - [example.net](https://example.net/coverage)",
+            "item_count": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "G06_multi_source_audit_replace_items",
+      "phase": "B",
+      "suite": "group",
+      "case_suite": "group",
+      "is_multiturn": true,
+      "metadata": {
+        "what_it_tests": "Dùng items của lượt mới nhất, loại danh sách bị thay thế và giữ URL trùng cho source_audit.",
+        "manual_review": "Chỉ có 3 item mới; item_count=3, unique_url_count=2, duplicate indices=[0,2], source_counts={new.example.org:2,second.example.net:1}. Không có old.example.org. Scorer chỉ chấm tên tool."
+      },
+      "input": [
+        {
+          "role": "user",
+          "content": "Tôi định kiểm tra danh sách cũ này: [{\"url\":\"https://old.example.org/archive\"}]."
+        },
+        {
+          "role": "assistant",
+          "content": "Bạn muốn kiểm tra link trùng trong danh sách này phải không?"
+        },
+        {
+          "role": "user",
+          "content": "Bỏ hẳn danh sách cũ. Chỉ kiểm tra URL trùng và đếm nguồn cho danh sách mới sau, giữ đủ 3 item kể cả link lặp, không tìm thêm nguồn: [{\"url\":\"https://new.example.org/brief\"},{\"url\":\"https://second.example.net/study\"},{\"url\":\"https://new.example.org/brief#notes\"}]."
+        }
+      ],
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "source_audit",
+            "args": {}
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "source_audit",
+            "args": {
+              "items": [
+                {
+                  "url": "https://new.example.org/brief"
+                },
+                {
+                  "url": "https://second.example.net/study"
+                },
+                {
+                  "url": "https://new.example.org/brief#notes"
+                }
+              ]
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_arg_value",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "source_audit",
+          "args": {
+            "items": [
+              {
+                "url": "https://new.example.org/brief"
+              },
+              {
+                "url": "https://second.example.net/study"
+              },
+              {
+                "url": "https://new.example.org/brief#notes"
+              }
+            ]
+          },
+          "result": {
+            "tool": "source_audit",
+            "item_count": 3,
+            "unique_url_count": 2,
+            "duplicate_urls": [
+              {
+                "url": "https://new.example.org/brief",
+                "indices": [
+                  0,
+                  2
+                ]
+              }
+            ],
+            "source_counts": {
+              "new.example.org": 2,
+              "second.example.net": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "G07_multi_change_news_filters",
+      "phase": "B",
+      "suite": "group",
+      "case_suite": "group",
+      "is_multiturn": true,
+      "metadata": {
+        "what_it_tests": "Ghi đè đồng thời timeframe year→month và số lượng 6→2, giữ chủ đề và topic=news từ ngữ cảnh."
+      },
+      "input": [
+        {
+          "role": "user",
+          "content": "Tôi muốn tìm 6 tin tức trên web trong năm nay, từ khóa tiếng Anh chính xác 'agent safety'."
+        },
+        {
+          "role": "assistant",
+          "content": "Bạn muốn giữ bộ lọc năm nay và số lượng 6 chứ?"
+        },
+        {
+          "role": "user",
+          "content": "Đổi sang tháng này, chỉ lấy 2 kết quả. Giữ nguyên từ khóa tiếng Anh và vẫn chỉ tìm tin tức trên web."
+        }
+      ],
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "lookup",
+            "args": {
+              "query": "agent safety",
+              "topic": "news",
+              "timeframe": "month",
+              "max_results": 2
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "lookup",
+            "args": {
+              "query": "agent safety",
+              "topic": "news",
+              "timeframe": "month",
+              "max_results": 2
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_arg_value",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "lookup",
+          "args": {
+            "query": "agent safety",
+            "topic": "news",
+            "timeframe": "month",
+            "max_results": 2
+          },
+          "result": {
+            "tool": "web_search",
+            "query": "agent safety",
+            "topic": "news",
+            "timeframe": "month",
+            "items": [
+              {
+                "title": "Your AI agent is only as safe as the packages it downloads | CyberScoop",
+                "url": "https://cyberscoop.com/ai-agent-software-supply-chain-security-op-ed",
+                "source": "cyberscoop.com",
+                "summary": "That is the context for the Open Agent Safety Platform NVIDIA launched on Sept. 28. The design starts from the right premise: you cannot secure an agent by asking it to behave. OpenShell runs each agent in a sandbox and applies policy outside the agent’s own process. Sentry, part of a reference design built on BlueField-4 data processing units (DPUs), watches agent activity from separate hardware, out of reach of a compromised host. More than 100 partners signed on at launch, ReversingLabs [...] Advertise\n\nCyberScoop\n\n Subscribe\n\nAdvertisement\n\nGet our latest cybersecurity news first on Google.\n\nClick here!\n\n Commentary\n\n# Your AI agent is only as safe as the packages it downloads\n\nNVIDIA's new agent safety platform puts enforcement in the right place. It still must know what it is letting through.\n\nBy Mario Vuksan\n\nListen to this article\n\n0:00\n\nLearn more.  This feature uses an automated voice, which may result in occasional errors in pronunciation, tone, or sentiment. [...] It also matches what I hear from customers. They are demanding AI safety that closes as many gaps as possible and uses the boundary between hardware and software to deliver security they can rely on. That is the standard every vendor in this ecosystem, mine included, will be measured against.",
+                "score": 0.75421005
+              },
+              {
+                "title": "IBM ties intelligent operations to agent safety and business value - SiliconANGLE",
+                "url": "https://siliconangle.com/2026/10/15/ibm-ties-intelligent-operations-agent-safety-business-value-ibmaioperatingmodel",
+                "source": "siliconangle.com",
+                "summary": "IBM supports Nvidia Corp.’s Open Agent Safety Platform, contributing enterprise capabilities spanning agent identity, credentials and hybrid infrastructure. Lynch’s discussions with the team at Apptio Inc., an IBM company, have also raised questions about extending agent safety into financial oversight.",
+                "score": 0.72629017
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "G08_multi_switch_latest_to_top",
+      "phase": "B",
+      "suite": "group",
+      "case_suite": "group",
+      "is_multiturn": true,
+      "metadata": {
+        "what_it_tests": "Đổi search_type Latest→Top và limit 7→2 sau nhiều lượt, giữ query của lượt đầu; không dùng timeline/lookup."
+      },
+      "input": [
+        {
+          "role": "user",
+          "content": "Tìm 7 bài mới nhất trên X theo từ khóa tiếng Anh chính xác 'tool calling'."
+        },
+        {
+          "role": "assistant",
+          "content": "Bạn muốn ưu tiên bài mới nhất hay bài nổi bật?"
+        },
+        {
+          "role": "user",
+          "content": "Đổi sang 2 bài nổi bật nhất (Top). Giữ nguyên từ khóa, không chuyển sang tìm web hay tài khoản cụ thể."
+        }
+      ],
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "social_search",
+            "args": {
+              "query": "tool calling",
+              "search_type": "Top",
+              "limit": 2
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "social_search",
+            "args": {
+              "query": "tool calling",
+              "search_type": "Top",
+              "limit": 2
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_arg_value",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "social_search",
+          "args": {
+            "query": "tool calling",
+            "search_type": "Top",
+            "limit": 2
+          },
+          "result": {
+            "tool": "search_tweets",
+            "query": "tool calling",
+            "search_type": "Top",
+            "items": [
+              {
+                "title": "Try Underdog: free, capable, private AI running locally on your device ",
+                "summary": "Try Underdog: free, capable, private AI running locally on your device \n\nNew build and Saluki 27B are out. Under 8GB, beats Qwen 3.8 27B at tool calling\n\nLike, repost, and comment one task you wouldn’t give a cloud agent to get an invite🦴",
+                "url": "https://x.com/UnderdogAI/status/2108347644712255932",
+                "source": "@UnderdogAI",
+                "date": "Fri Oct 09 00:03:44 +0000 2026",
+                "metrics": {
+                  "favorites": 865,
+                  "retweets": 188,
+                  "views": "72438"
+                }
+              },
+              {
+                "title": "what the f*ck",
+                "summary": "what the f*ck\n\nsomeone just took the refusals out of Kimi K3.1 Pro 😳\n\nSilk Compute put it on an API and they don't store your prompts or replies\n\n-1M context\n-reads text, images and video\n-tool calling with max reasoning\n-works with OpenAI and Anthropic SDKs, just change the base URL\n-model id: kimi-k3.1-pro-uncensored\n-top up from $5, no subscription\n\none of the strongest open models with no refusals and no logs. I'd put $5 on it and throw the prompts other models refuse at it\n\ntry it here 👇\nhttps://t.co/dLXDswIiuv",
+                "url": "https://x.com/Israfilv2/status/2118599572255822085",
+                "source": "@Israfilv2",
+                "date": "Fri Nov 06 07:01:14 +0000 2026",
+                "metrics": {
+                  "favorites": 211,
+                  "retweets": 93,
+                  "views": "49906"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "G09_multi_cancel_send",
+      "phase": "B",
+      "suite": "group",
+      "case_suite": "group",
+      "is_multiturn": true,
+      "metadata": {
+        "what_it_tests": "Lượt từ chối/hủy cuối cùng phải dừng hành động gửi; không send, không hỏi xác nhận lặp hoặc gọi tool khác."
+      },
+      "input": [
+        {
+          "role": "user",
+          "content": "Tôi muốn gửi bản nháp 'Bản tin CR7: nghiên cứu về agent safety' lên private channel Telegram của nhóm."
+        },
+        {
+          "role": "assistant",
+          "content": "Bạn xác nhận gửi nguyên văn 'Bản tin CR7: nghiên cứu về agent safety' lên private channel Telegram của nhóm không?"
+        },
+        {
+          "role": "user",
+          "content": "Không. Hủy yêu cầu gửi, không đăng gì, không cần tìm hay trình bày thêm. Chỉ báo đã hủy là được."
+        }
+      ],
+      "expect": {
+        "no_tool": true
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [],
+        "actual_text": "Yêu cầu gửi đã bị hủy.",
+        "case_failure_type": "unnecessary_tool",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": []
+    },
+    {
+      "id": "G10_multi_audit_empty_items",
+      "phase": "B",
+      "suite": "group",
+      "case_suite": "group",
+      "is_multiturn": true,
+      "metadata": {
+        "what_it_tests": "Phân biệt danh sách rỗng được cung cấp rõ với chưa có items; tiếp tục yêu cầu sau lượt hỏi lại bằng source_audit(items=[]).",
+        "manual_review": "Output phải có item_count=0, unique_url_count=0, duplicate_urls=[], source_counts={}."
+      },
+      "input": [
+        {
+          "role": "user",
+          "content": "Tôi muốn kiểm tra link trùng và số nguồn trong một danh sách research items."
+        },
+        {
+          "role": "assistant",
+          "content": "Bạn gửi danh sách items cần kiểm tra nhé."
+        },
+        {
+          "role": "user",
+          "content": "Danh sách hiện tại là [] thật, không phải thiếu dữ liệu. Hãy kiểm tra danh sách rỗng đó để trả về thống kê 0, không tìm thêm nguồn và không tự thêm item."
+        }
+      ],
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "source_audit",
+            "args": {
+              "items": []
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "source_audit",
+            "args": {
+              "items": []
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_tool",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "source_audit",
+          "args": {
+            "items": []
+          },
+          "result": {
+            "tool": "source_audit",
+            "item_count": 0,
+            "unique_url_count": 0,
+            "duplicate_urls": [],
+            "source_counts": {}
+          }
+        }
+      ]
+    }
+  ]
+}

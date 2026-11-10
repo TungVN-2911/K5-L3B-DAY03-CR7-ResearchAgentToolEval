@@ -1,0 +1,833 @@
+{
+  "run_id": "v5_B_group_openrouter_20261110T192445066438",
+  "version": "v5",
+  "artifact_version": "v5+p0980414118c3+tf0632d419cd7",
+  "prompt_hash": "0980414118c33b4b274bbb05461bcd130b0ef2be767eb5ef4a94e0673d496738",
+  "tools_hash": "f0632d419cd7ddd37ccdfb523d619bc1c77d2858fe9cc475f040a49d84d5ec95",
+  "phase": "B",
+  "suite": "group",
+  "provider": "openrouter",
+  "model": "openai/gpt-4o-mini",
+  "system_prompt": "D:\\Vin AI\\K5-L3B-DAY03-CR7-ResearchAgentToolEval\\starter_v0\\artifacts\\system_prompt.md",
+  "tools": "D:\\Vin AI\\K5-L3B-DAY03-CR7-ResearchAgentToolEval\\starter_v0\\artifacts\\tools.yaml",
+  "eval_cases": "data\\eval_group.json",
+  "dataset_id": "day03_v2_research_group",
+  "dataset_role": "group",
+  "description": "CR7 — 10 case do Nguyễn Trọng Khiêm (Người 3) soạn với hỗ trợ Codex: 5 single-turn và 5 multi-turn. Đo routing, bộ lọc tìm kiếm, thiếu dữ liệu, xác nhận/hủy gửi và tool mới source_audit. Case có items dạng object được kiểm tra thêm thủ công trong run vì scorer hiện chưa so sánh được danh sách nhiều object.",
+  "generated_at": "2026-11-10T19:24:45",
+  "summary": {
+    "total_cases": 10,
+    "measured_cases": 10,
+    "provider_error_cases": 0,
+    "passed_cases": 9,
+    "case_accuracy": 0.9,
+    "tool_routing_accuracy": 0.9,
+    "argument_accuracy": 0.9,
+    "multiturn_accuracy": 1.0,
+    "failure_counts": {
+      "wrong_arg_value": 1
+    },
+    "observed_mismatch_counts": {
+      "extra_tool_call": 1
+    }
+  },
+  "results": [
+    {
+      "id": "G01_single_source_audit_duplicates",
+      "phase": "B",
+      "suite": "group",
+      "case_suite": "group",
+      "is_multiturn": false,
+      "metadata": {
+        "what_it_tests": "Route tới tool mới khi đã có research items; không tìm kiếm hoặc format thay cho audit.",
+        "manual_review": "Đối chiếu đủ 3 URL nguyên bản; item_count=3, unique_url_count=2, duplicate indices=[0,1], source_counts={example:2,research.example.net:1}. Scorer chỉ chấm tên tool ở case này."
+      },
+      "input": "Kiểm tra URL trùng và đếm số item theo nguồn trong danh sách đã thu thập sau, giữ nguyên cả link trùng và không tìm thêm dữ liệu: [{\"url\":\"https://www.example.org/agents/#overview\",\"source\":\"Example\"},{\"url\":\"https://example.org/agents\",\"source\":\"Example\"},{\"url\":\"https://research.example.net/report\"}].",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "source_audit",
+            "args": {}
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "source_audit",
+            "args": {
+              "items": [
+                {
+                  "url": "https://www.example.org/agents/#overview",
+                  "source": "Example"
+                },
+                {
+                  "url": "https://example.org/agents",
+                  "source": "Example"
+                },
+                {
+                  "url": "https://research.example.net/report"
+                }
+              ]
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_tool",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "source_audit",
+          "args": {
+            "items": [
+              {
+                "url": "https://www.example.org/agents/#overview",
+                "source": "Example"
+              },
+              {
+                "url": "https://example.org/agents",
+                "source": "Example"
+              },
+              {
+                "url": "https://research.example.net/report"
+              }
+            ]
+          },
+          "result": {
+            "tool": "source_audit",
+            "item_count": 3,
+            "unique_url_count": 2,
+            "duplicate_urls": [
+              {
+                "url": "https://example.org/agents",
+                "indices": [
+                  0,
+                  1
+                ]
+              }
+            ],
+            "source_counts": {
+              "example": 2,
+              "research.example.net": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "G02_single_web_news_year_limit",
+      "phase": "B",
+      "suite": "group",
+      "case_suite": "group",
+      "is_multiturn": false,
+      "metadata": {
+        "what_it_tests": "Ánh xạ năm nay sang year, giữ query tiếng Anh và số kết quả; không dùng timeframe mặc định week."
+      },
+      "input": "Tìm trên web đúng 2 tin tức trong năm nay với từ khóa chính xác bằng tiếng Anh là 'multimodal agents'.",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "lookup",
+            "args": {
+              "query": "multimodal agents",
+              "topic": "news",
+              "timeframe": "year",
+              "max_results": 2
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": false,
+        "routing_correct": false,
+        "args_correct": false,
+        "actual_tool_calls": [
+          {
+            "name": "lookup",
+            "args": {
+              "query": "multimodal agents",
+              "topic": "news",
+              "timeframe": "year",
+              "max_results": 2
+            }
+          },
+          {
+            "name": "social_search",
+            "args": {
+              "query": "multimodal agents",
+              "limit": 2,
+              "search_type": "Latest"
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_arg_value",
+        "observed_mismatch": "extra_tool_call",
+        "failure_type": "wrong_arg_value",
+        "failures": [
+          "extra tool call social_search"
+        ]
+      },
+      "tool_results": [
+        {
+          "tool": "lookup",
+          "args": {
+            "query": "multimodal agents",
+            "topic": "news",
+            "timeframe": "year",
+            "max_results": 2
+          },
+          "result": {
+            "tool": "web_search",
+            "query": "multimodal agents",
+            "topic": "news",
+            "timeframe": "year",
+            "items": [
+              {
+                "title": "MoMA: a mixture-of-multimodal-agents architecture for enhancing clinical prediction modelling | npj Digital Medicine",
+                "url": "https://www.nature.com/articles/s41746-025-02219-4",
+                "source": "nature.com",
+                "summary": "In this work, we introduced Mixture-of-Multimodal-Agents (MoMA), a flexible architecture designed to harness the power of pretrained LLMs for clinical prediction tasks involving multimodal medical data. MoMA adopts a modular, plug-and-play design that enables state-of-the-art LLMs to serve as specialist agents for processing specific data types, allowing them to be easily swapped or extended based on task requirements. The proposed architecture was validated on three clinical tasks involving [...] Multimodal electronic health record (EHR) data provide richer, complementary insights into patient health compared to single-modality data. However, effectively integrating diverse data modalities for clinical prediction modeling remains challenging due to the substantial data requirements. We introduce a novel architecture, Mixture-of-Multimodal-Agents (MoMA), designed to leverage multiple large language model (LLM) agents for clinical prediction tasks using multimodal EHR data. MoMA employs [...] data. MoMA employs specialized LLM agents (“specialist agents”) to convert non-textual modalities, such as medical images and laboratory results, into structured textual summaries. These summaries, together with clinical notes, are combined by another LLM (“aggregator agent”) to generate a unified multimodal summary, which is then used by a third LLM (“predictor agent”) to produce clinical predictions. Evaluating MoMA with different modality combinations and prediction settings, MoMA",
+                "score": 0.8742601
+              },
+              {
+                "title": "Automatic Prompt Optimization for Multimodal Vision Agents: A Self-Driving Car Example | Towards Data Science",
+                "url": "https://towardsdatascience.com/automatic-prompt-optimization-for-multimodal-vision-agents-a-self-driving-car-example",
+                "source": "towardsdatascience.com",
+                "summary": "## Optimizing Multimodal Agents\n\nMultimodal AI agents, those that can process text and images (or other media), are rapidly entering real-world domains like autonomous driving, healthcare, and robotics. In these settings, we have traditionally used vision models like CNNs; in the post-GPT era, we can use vision and multimodal language models that leverage human instructions in the form of prompts, rather than task-oriented, highly specific vision models.",
+                "score": 0.8338803
+              }
+            ]
+          }
+        },
+        {
+          "tool": "social_search",
+          "args": {
+            "query": "multimodal agents",
+            "limit": 2,
+            "search_type": "Latest"
+          },
+          "result": {
+            "tool": "search_tweets",
+            "query": "multimodal agents",
+            "search_type": "Latest",
+            "items": [
+              {
+                "title": "If I had to land a $200K AI engineer job in 90 days, I would not get a degree.",
+                "summary": "If I had to land a $200K AI engineer job in 90 days, I would not get a degree.\n\nI would master these 10 GitHub repos.\n\n1. awesome-llm-apps\nThe production AI playbook. RAG, agents, multimodal apps, all in working code. 106K+ stars.\nRepo → https://t.co/50OD473w70…\n\n2. LangChain\nThe foundational framework. Used in production by Klarna, Replit, Elastic, and most AI startups in 2026.\nRepo → https://t.co/e8juC9sbHg…\n\n3. LangGraph\nThe orchestration layer powering production agents. The skill on every senior AI engineer job description.\nRepo → https://t.co/e8juC9sbHg…\n\n4. CrewAI\nMulti-agent coordination. The framework most Fortune 500 teams reach for first.\nRepo → https://t.co/Ixp7pBR3sD…\n\n5. Ollama\nRun any open-source LLM on your own machine. The fastest way to learn how models actually work.\nRepo → https://t.co/x4D63YcRCg\n\n6. awesome-mcp-servers\nMCP is the standard every major AI lab adopted in 2026. Knowing it puts you ahead of 99% of engineers.\nRepo → https://t.co/2sxxKGwmT8…\n\n7. Qdrant\nThe vector database used for production RAG at scale. Embeddings and semantic search are non-negotiable for AI roles.\nRepo → https://t.co/OfhwKdk0zI\n\n8. AI-Agents-for-Beginners\nMicrosoft's free 12-lesson course on building agents. Real code, real exercises, real prep.\nRepo → https://t.co/J2ijcIpCCn…\n\n9. system-design-primer\nProduction AI is system design. The repo FAANG engineers use to prep for interviews.\nRepo → https://t.co/g52zkFf5MB…\n\n10. awesome-claude-code\nThe playbook for the tool now used inside FAANG, OpenAI, Anthropic, and most YC startups.\nRepo → https://t.co/rprwu6qQsp…\n\nHere's the wildest part:\n\nA $200K AI engineer in 2026 isn't paid for a degree.\n\nThey are paid for what these 10 repos teach.\n\nThe market doesn't care where you learned it. It only cares if you can ship.\n\n90 days. 10 repos. One portfolio that proves you can do the work.\n\nThat's it. That's the whole game.\n\nSave this before you forget.\n\n100% free. 100% open source.",
+                "url": "https://x.com/Divyyanshishrma/status/2120123647109325212",
+                "source": "@Divyyanshishrma",
+                "date": "Tue Nov 10 11:57:22 +0000 2026",
+                "metrics": {
+                  "favorites": 5,
+                  "retweets": 2,
+                  "views": "149"
+                }
+              },
+              {
+                "title": "@SoundHound Smart launch, SoundHound AI! Multimodal simulation OASYS test agents conversations noise bad lines truly pow",
+                "summary": "@SoundHound Smart launch, SoundHound AI! Multimodal simulation OASYS test agents conversations noise bad lines truly powerful work today.",
+                "url": "https://x.com/NoorTech0/status/2120093502717763676",
+                "source": "@NoorTech0",
+                "date": "Tue Nov 10 09:57:35 +0000 2026",
+                "metrics": {
+                  "favorites": 0,
+                  "retweets": 0,
+                  "views": "7"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "G03_single_audit_missing_items",
+      "phase": "B",
+      "suite": "group",
+      "case_suite": "group",
+      "is_multiturn": false,
+      "metadata": {
+        "what_it_tests": "Phải xin items còn thiếu cho tool mới; không tự dựng danh sách, không lấy items=[] làm dữ liệu chưa được cung cấp."
+      },
+      "input": "Kiểm tra xem danh sách nguồn nghiên cứu của tôi có link trùng không. Tôi chưa gửi danh sách hoặc URL nào cho bạn.",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "clarify",
+            "args": {
+              "response_type": "text"
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "clarify",
+            "args": {
+              "question": "Bạn vui lòng cung cấp danh sách các nguồn nghiên cứu mà bạn muốn kiểm tra không?",
+              "response_type": "text"
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "missing_info",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "clarify",
+          "args": {
+            "question": "Bạn vui lòng cung cấp danh sách các nguồn nghiên cứu mà bạn muốn kiểm tra không?",
+            "response_type": "text"
+          },
+          "result": {
+            "tool": "ask_user",
+            "question": "Bạn vui lòng cung cấp danh sách các nguồn nghiên cứu mà bạn muốn kiểm tra không?",
+            "response_type": "text",
+            "options": [],
+            "awaiting_user": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "G04_single_send_draft_confirmation",
+      "phase": "B",
+      "suite": "group",
+      "case_suite": "group",
+      "is_multiturn": false,
+      "metadata": {
+        "what_it_tests": "Đã có nội dung cụ thể vẫn phải hỏi xác nhận trước send; tách khỏi trường hợp thiếu nội dung của R12 base."
+      },
+      "input": "Gửi nguyên văn bản nháp 'Bản tin thử nghiệm CR7: đã tổng hợp 2 nguồn về research agent.' lên private channel Telegram của nhóm. Đây là yêu cầu gửi mới, trước đó tôi chưa trả lời câu hỏi xác nhận nào.",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "clarify",
+            "args": {
+              "response_type": "yes_no"
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "clarify",
+            "args": {
+              "question": "Bạn xác nhận muốn gửi nguyên văn bản nháp 'Bản tin thử nghiệm CR7: đã tổng hợp 2 nguồn về research agent.' lên private channel Telegram của nhóm chứ?",
+              "response_type": "yes_no"
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_boundary",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "clarify",
+          "args": {
+            "question": "Bạn xác nhận muốn gửi nguyên văn bản nháp 'Bản tin thử nghiệm CR7: đã tổng hợp 2 nguồn về research agent.' lên private channel Telegram của nhóm chứ?",
+            "response_type": "yes_no"
+          },
+          "result": {
+            "tool": "ask_user",
+            "question": "Bạn xác nhận muốn gửi nguyên văn bản nháp 'Bản tin thử nghiệm CR7: đã tổng hợp 2 nguồn về research agent.' lên private channel Telegram của nhóm chứ?",
+            "response_type": "yes_no",
+            "options": [],
+            "awaiting_user": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "G05_single_format_existing_items",
+      "phase": "B",
+      "suite": "group",
+      "case_suite": "group",
+      "is_multiturn": false,
+      "metadata": {
+        "what_it_tests": "Phân biệt format dữ liệu đã có với fetch/lookup/source_audit; chọn template thread.",
+        "manual_review": "Đối chiếu 2 items, URL và summary nguyên bản; item_count=2 và markdown có 1/, 2/. Scorer chỉ chấm routing và template."
+      },
+      "input": "Tạo thread được đánh số từ đúng 2 research items sau, chỉ trình bày dữ liệu có sẵn, không tìm hoặc đọc thêm URL: [{\"title\":\"Agent routing\",\"url\":\"https://example.org/routing\",\"summary\":\"Đo lựa chọn tool.\"},{\"title\":\"Source coverage\",\"url\":\"https://example.net/coverage\",\"summary\":\"Đếm số nguồn nghiên cứu.\"}].",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "format",
+            "args": {
+              "template": "thread"
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "format",
+            "args": {
+              "items": [
+                {
+                  "title": "Agent routing",
+                  "url": "https://example.org/routing",
+                  "summary": "Đo lựa chọn tool."
+                },
+                {
+                  "title": "Source coverage",
+                  "url": "https://example.net/coverage",
+                  "summary": "Đếm số nguồn nghiên cứu."
+                }
+              ],
+              "template": "thread"
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_tool",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "format",
+          "args": {
+            "items": [
+              {
+                "title": "Agent routing",
+                "url": "https://example.org/routing",
+                "summary": "Đo lựa chọn tool."
+              },
+              {
+                "title": "Source coverage",
+                "url": "https://example.net/coverage",
+                "summary": "Đếm số nguồn nghiên cứu."
+              }
+            ],
+            "template": "thread"
+          },
+          "result": {
+            "tool": "render_digest",
+            "template": "thread",
+            "markdown": "1/ Đo lựa chọn tool. - [example.org](https://example.org/routing)\n\n2/ Đếm số nguồn nghiên cứu. - [example.net](https://example.net/coverage)",
+            "item_count": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "G06_multi_source_audit_replace_items",
+      "phase": "B",
+      "suite": "group",
+      "case_suite": "group",
+      "is_multiturn": true,
+      "metadata": {
+        "what_it_tests": "Dùng items của lượt mới nhất, loại danh sách bị thay thế và giữ URL trùng cho source_audit.",
+        "manual_review": "Chỉ có 3 item mới; item_count=3, unique_url_count=2, duplicate indices=[0,2], source_counts={new.example.org:2,second.example.net:1}. Không có old.example.org. Scorer chỉ chấm tên tool."
+      },
+      "input": [
+        {
+          "role": "user",
+          "content": "Tôi định kiểm tra danh sách cũ này: [{\"url\":\"https://old.example.org/archive\"}]."
+        },
+        {
+          "role": "assistant",
+          "content": "Bạn muốn kiểm tra link trùng trong danh sách này phải không?"
+        },
+        {
+          "role": "user",
+          "content": "Bỏ hẳn danh sách cũ. Chỉ kiểm tra URL trùng và đếm nguồn cho danh sách mới sau, giữ đủ 3 item kể cả link lặp, không tìm thêm nguồn: [{\"url\":\"https://new.example.org/brief\"},{\"url\":\"https://second.example.net/study\"},{\"url\":\"https://new.example.org/brief#notes\"}]."
+        }
+      ],
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "source_audit",
+            "args": {}
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "source_audit",
+            "args": {
+              "items": [
+                {
+                  "url": "https://new.example.org/brief"
+                },
+                {
+                  "url": "https://second.example.net/study"
+                },
+                {
+                  "url": "https://new.example.org/brief#notes"
+                }
+              ]
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_arg_value",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "source_audit",
+          "args": {
+            "items": [
+              {
+                "url": "https://new.example.org/brief"
+              },
+              {
+                "url": "https://second.example.net/study"
+              },
+              {
+                "url": "https://new.example.org/brief#notes"
+              }
+            ]
+          },
+          "result": {
+            "tool": "source_audit",
+            "item_count": 3,
+            "unique_url_count": 2,
+            "duplicate_urls": [
+              {
+                "url": "https://new.example.org/brief",
+                "indices": [
+                  0,
+                  2
+                ]
+              }
+            ],
+            "source_counts": {
+              "new.example.org": 2,
+              "second.example.net": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "G07_multi_change_news_filters",
+      "phase": "B",
+      "suite": "group",
+      "case_suite": "group",
+      "is_multiturn": true,
+      "metadata": {
+        "what_it_tests": "Ghi đè đồng thời timeframe year→month và số lượng 6→2, giữ chủ đề và topic=news từ ngữ cảnh."
+      },
+      "input": [
+        {
+          "role": "user",
+          "content": "Tôi muốn tìm 6 tin tức trên web trong năm nay, từ khóa tiếng Anh chính xác 'agent safety'."
+        },
+        {
+          "role": "assistant",
+          "content": "Bạn muốn giữ bộ lọc năm nay và số lượng 6 chứ?"
+        },
+        {
+          "role": "user",
+          "content": "Đổi sang tháng này, chỉ lấy 2 kết quả. Giữ nguyên từ khóa tiếng Anh và vẫn chỉ tìm tin tức trên web."
+        }
+      ],
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "lookup",
+            "args": {
+              "query": "agent safety",
+              "topic": "news",
+              "timeframe": "month",
+              "max_results": 2
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "lookup",
+            "args": {
+              "query": "agent safety",
+              "topic": "news",
+              "timeframe": "month",
+              "max_results": 2
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_arg_value",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "lookup",
+          "args": {
+            "query": "agent safety",
+            "topic": "news",
+            "timeframe": "month",
+            "max_results": 2
+          },
+          "result": {
+            "tool": "web_search",
+            "query": "agent safety",
+            "topic": "news",
+            "timeframe": "month",
+            "items": [
+              {
+                "title": "Your AI agent is only as safe as the packages it downloads | CyberScoop",
+                "url": "https://cyberscoop.com/ai-agent-software-supply-chain-security-op-ed",
+                "source": "cyberscoop.com",
+                "summary": "That is the context for the Open Agent Safety Platform NVIDIA launched on Sept. 28. The design starts from the right premise: you cannot secure an agent by asking it to behave. OpenShell runs each agent in a sandbox and applies policy outside the agent’s own process. Sentry, part of a reference design built on BlueField-4 data processing units (DPUs), watches agent activity from separate hardware, out of reach of a compromised host. More than 100 partners signed on at launch, ReversingLabs [...] Advertise\n\nCyberScoop\n\n Subscribe\n\nAdvertisement\n\nGet our latest cybersecurity news first on Google.\n\nClick here!\n\n Commentary\n\n# Your AI agent is only as safe as the packages it downloads\n\nNVIDIA's new agent safety platform puts enforcement in the right place. It still must know what it is letting through.\n\nBy Mario Vuksan\n\nListen to this article\n\n0:00\n\nLearn more.  This feature uses an automated voice, which may result in occasional errors in pronunciation, tone, or sentiment. [...] It also matches what I hear from customers. They are demanding AI safety that closes as many gaps as possible and uses the boundary between hardware and software to deliver security they can rely on. That is the standard every vendor in this ecosystem, mine included, will be measured against.",
+                "score": 0.75421005
+              },
+              {
+                "title": "IBM ties intelligent operations to agent safety and business value - SiliconANGLE",
+                "url": "https://siliconangle.com/2026/10/15/ibm-ties-intelligent-operations-agent-safety-business-value-ibmaioperatingmodel",
+                "source": "siliconangle.com",
+                "summary": "IBM supports Nvidia Corp.’s Open Agent Safety Platform, contributing enterprise capabilities spanning agent identity, credentials and hybrid infrastructure. Lynch’s discussions with the team at Apptio Inc., an IBM company, have also raised questions about extending agent safety into financial oversight.",
+                "score": 0.72629017
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "G08_multi_switch_latest_to_top",
+      "phase": "B",
+      "suite": "group",
+      "case_suite": "group",
+      "is_multiturn": true,
+      "metadata": {
+        "what_it_tests": "Đổi search_type Latest→Top và limit 7→2 sau nhiều lượt, giữ query của lượt đầu; không dùng timeline/lookup."
+      },
+      "input": [
+        {
+          "role": "user",
+          "content": "Tìm 7 bài mới nhất trên X theo từ khóa tiếng Anh chính xác 'tool calling'."
+        },
+        {
+          "role": "assistant",
+          "content": "Bạn muốn ưu tiên bài mới nhất hay bài nổi bật?"
+        },
+        {
+          "role": "user",
+          "content": "Đổi sang 2 bài nổi bật nhất (Top). Giữ nguyên từ khóa, không chuyển sang tìm web hay tài khoản cụ thể."
+        }
+      ],
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "social_search",
+            "args": {
+              "query": "tool calling",
+              "search_type": "Top",
+              "limit": 2
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "social_search",
+            "args": {
+              "query": "tool calling",
+              "search_type": "Top",
+              "limit": 2
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_arg_value",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "social_search",
+          "args": {
+            "query": "tool calling",
+            "search_type": "Top",
+            "limit": 2
+          },
+          "result": {
+            "tool": "search_tweets",
+            "query": "tool calling",
+            "search_type": "Top",
+            "items": [
+              {
+                "title": "For about four thousand years, the word \"brand\" meant fire.",
+                "summary": "For about four thousand years, the word \"brand\" meant fire.\n\nThis one is made with cold.\n\nHold that thought for a second, because it breaks something in your head. Every instinct you have about permanent marks says heat: glowing metal, a hiss, the smell people remember for the rest of their lives. Here the tool is chilled until it is far below anything a winter can produce, and the result is meant to outlast the person's next ten birthdays.\n\nSo the first question is not \"does it hurt.\" That one is obvious. The real question is stranger: what does it feel like when something that cold touches you, and why would anyone volunteer to find out?\n\nI watched a short clip of exactly this. I am not going to tell you what happens in it. I want to tell you why it is hard to look away from, and why I think the part you assume you know is the part you have wrong.\n\nLet me start with the part everyone argues about.\n\nDid she flinch?\n\nThat is the entire comment section before anyone has even typed a word. Humans are built to scan a face for the exact instant a body decides it has had enough. We do it at dentist offices, at tattoo shops, at vaccination clinics, at funerals when the speaker is about to break. The flinch is a tiny public confession. It says: the story you told yourself about being fine just ran out of road.\n\nThe clip is built around that confession, and around whether it ever arrives.\n\nI will not answer it here. But I will tell you what is waiting underneath the question, because it is more interesting than the answer.\n\nPain is not a number. It is a negotiation.\n\nPain scientists have known for decades that the same stimulus can land as agony in one person and as a manageable ache in another, and can land differently in the same person on two different days. What you expect, who is standing next to you, whether you chose this, whether you can see an end to it, whether you trust the person holding the tool: all of it gets mixed into the signal before you ever feel it. Your nervous system does not report the news. It writes the headline.\n\nThere is a standard lab procedure for studying cold pain, in which volunteers submerge a hand in ice water and report how long they can stand it. Researchers have used versions of it for generations because cold is a clean, repeatable, and surprisingly personal kind of discomfort. What they keep finding is that the ice water is almost the least important variable. Mindset, company, and sense of control move the number more than the temperature does.\n\nNow put that fact next to a metal stamp chilled to the point where it can destroy living tissue on contact, and ask yourself what happens to the negotiation.\n\nFear says: that cannot be survivable. Experience, apparently, says something else.\nThat gap, between what the mind braces for and what the body reports, is the entire engine of this video. Here is the second thing you should know before you press play.\n\nFreeze branding was not invented for people. It was invented for animals, and the reason it exists is, in its own way, a quiet act of mercy.\n\nFor centuries, ranchers marked cattle and horses with hot irons. Tomb paintings from ancient Egypt already show livestock being marked this way, so the practice is older than most of the countries you could name. Fire works. It also scars. It sears the hide, it leaves permanent damaged tissue, and for the animal it is a brutal minute on an otherwise ordinary day.\n\nIn the 1960s, researchers working with livestock in the American Northwest asked a question that sounds almost childish in hindsight: what if the cold could do the same job without the burn?\n\nIt turned out that the cells which give hair its color are among the most fragile in the body. They are sensitive to cold in a way that surrounding cells are not. Chill a patch of skin precisely, for precisely long enough, and you do not blister it, you do not char it. You quietly switch off the pigment factory. The skin survives. The hair that grows back later grows in white.\n\nThe mark does not appear when the tool is lifted. It arrives weeks later, from the inside out, written by the body itself.\n\nRead that sentence again, because it explains why this is not just a cruel curiosity.\n\nThe stamp does not draw the picture. It removes a single instruction, and then the person's own biology draws it, slowly, in their own skin, at its own pace.\n\nThat is a very strange thing to hand to a human being.\n\nThink about every other permanent mark a person can choose. A tattoo is pigment put in from outside, a foreign substance placed on purpose. A scar is an accident that earns a story afterward. A burn brand is damage made on purpose, visible at once, the wound is the design.\n\nThis is none of those. This is a decision whose proof you cannot see yet.\n\nSomewhere in that gap, between the moment the stamp lifts and the moment the result shows up, is a person standing there with nothing but a promise. The tool did its work in seconds. The skin has not confirmed it. Everyone watching knows how this can go and nobody can see it yet.\n\nI find that more interesting than any dramatic slow-motion shot could be.\n\nMost of what we call courage is a decision made while the outcome is hidden. We praise people who jump after the result is known, and we forget that it was never known, which is the entire point of calling it a leap.\n\nSo when a clip circulates and you can feel yourself leaning toward the screen, you are not leaning toward the pain. You are leaning toward the unknown, toward the quiet few seconds in which a human being has already said yes and the universe has not yet replied.\n\nLet me move to the idea that made me stop scrolling in the first place.\n\nA brand is a statement about ownership.\n\nThat is what the word has always carried. Before it meant a logo, before it meant a sneaker company or a coffee chain, it meant a mark placed on something so that everyone could see who it belonged to. A rancher's symbol on a flank said: this one is mine, and if it wanders, bring it back.\n\nThe mark was never for the animal. It was for the crowd.\n\nNow notice what flips when the same technique is applied to a person who walked up and asked for it.\n\nThe tool is the same. The principle is the same. The cold is the same. And the sentence the mark says is completely reversed. It no longer says \"this belongs to someone else.\" It says \"this belongs to me, and I decided what goes on it.\"\n\nAn instrument built to claim ownership over another living thing becomes, in a different pair of hands, an instrument of self-ownership.\n\nI do not think that reversal is an accident of the internet. I think it is the reason the clip works on so many people who would never in a million years do this themselves. It takes an old symbol of control and hands the controls to the person wearing the mark.\n\nAnd then there is the shape.\n\nA paw.\n\nOf all the designs a person could choose, that one carries an unusual amount of freight. A paw print is a signature that nobody had to sign. It is the evidence that something wild, or something loyal, or something both at once, passed through a place and did not need to announce itself. Trackers read it like handwriting. Children press their fingers into the shape in the mud and feel, briefly, like something older than themselves.\n\nI have no idea what this particular paw means to the person who chose it. It could be an animal she loved. A place she is from. A promise. A joke she has been telling for years. A dare. I am not going to invent a reason, and you should be suspicious of anyone who does.\n\nBut I will say this. When a person chooses to carry the track of an animal on their own body, they are making a quiet claim about what they want to be associated with. Not strength exactly. Presence. The kind of creature that leaves a clear mark and does not apologize for it.\n\nWhich brings me to the part that is easy to miss.\n\nNobody does this alone.\n\nThere is always someone holding the tool. There is always someone who learned how long the cold has to stay on the skin and who knows what happens if that number is wrong. Somebody has to be the steady hand, and somebody has to be the shoulder, and the whole arrangement runs on a stranger-level amount of trust.\n\nThink about how much faith that takes. You are turning your back to a person. You are giving them a body part. You are agreeing to stay still. And what they are holding is not a pen.\n\nWe underestimate how rare it is to hand that kind of trust to another human being in an ordinary afternoon. Most of our days are built to avoid it. We keep our distance, we hold our own things, we check our own work.\n\nThe truth is that part of why this kind of ritual exists, in any culture, in any century, is not the mark. It is the trust required to receive it.\n\nCultures across the world have used deliberate marks on skin as rites of passage, as records, as declarations, as protections, as proof of survival. Long before anyone posted a video, people were saying through their bodies what they could not say any other way: I was here. I endured this. I belong to these people. I belong to myself.\n\nA modern clip of a smiling person with something cold pressed to her shoulder is the newest verse in a very old song.\n\nHere is where I want to be honest, because the internet is not.\n\nThere is a version of this story that is just a stunt. A dare. A trick for attention. Maybe it is that, in part. I do not know, and neither do you, and anyone claiming certainty about a stranger's motives in a few seconds of footage is selling something.\n\nBut there is also a version where it is none of those things. Where it is simply a person doing something deliberate with their own skin, in front of people they trust, and finding out that what looked terrifying from the outside felt different from the inside.\n\nBoth versions can be true on the same afternoon.\n\nHere is a thing I keep coming back to: the audience's reaction is a mirror, and it is not always flattering.\n\nWhen people see someone else take a risk, the response splits almost instantly. One group says: why would anyone do that. Another says: I wish I had the nerve. Both are really talking about themselves. The first is defending the life they have chosen. The second is mourning, a little, the life they have not.\n\nNeither is wrong. But it is worth noticing which sentence arrived first in your own head, and how fast.\n\nBecause the speed tells you something. Not about the video. About you.\n\nThe strange thing about permanent decisions is that they are not usually made in dramatic moments. They are made in small, quiet ones. A shrug. A \"sure, why not.\" A friend nodding. A promise to yourself that you will not chicken out, followed by a quick second where you almost do.\n\nThe clip lives in that second.\n\nAnd that is why I will not describe it for you. If I describe it, I take away the one thing you cannot get from a paragraph: the weight of watching a person who has already decided, in real time, while the decision becomes a fact.\n\nLet me give you the cold, in numbers, because numbers make the strangeness land.\n\nLiquid nitrogen sits at roughly minus 196 degrees Celsius. Dry ice, the stuff that makes stage fog, is around minus 78. In the livestock version of this work, irons are chilled in baths of coolants like these, sometimes dry ice mixed with alcohol so the metal can reach extreme temperatures and hold them. Your freezer is about minus 18. A brutal winter night in Siberia can dip toward minus 50.\n\nNone of those are the same thing as a metal surface designed to pull heat out of living tissue on purpose, fast and exactly.\n\nAnd yet the entire craft comes down to seconds.\n\nThat is the detail that stays with me. Not the temperature. The clock.\n\nIn animal work, how long the iron stays on the skin decides what the mark becomes. Shorter contact targets the pigment cells and leaves the surface intact. Longer contact reaches deeper, to the structures that make hair at all, and the result changes character. Add a little, and you get a different mark. Take away a little, and you get nothing. The people who do this well are not artists in the sense of brushes and canvases. They are artists in the sense of timing, the way a chef is or a surgeon is, the way someone who has done the same thing a thousand times is.\n\nA few seconds, and a decision that stays for years.\n\nI keep trying to think of anything else in ordinary life that works that way. A signature. A wedding vow. A text you cannot unsend. A word said in anger to someone you love. Most of the permanent things in our lives happen faster than we can think about them, and we spend the rest of our lives living inside the consequence.\n\nThis clip takes that universal fact and makes it physical. You can see the exact scale of it. It is just short enough to rewatch and long enough to feel.\n\nHere is another layer, and this one is for the skeptics.\n\nWhy do we watch other people experience discomfort at all?\n\nPsychologists have a few answers. One is simulation: watching someone else's body do something activates a faint echo of it in our own, the way you wince when a stranger stubs a toe. Another is rehearsal: the mind quietly practices what it would do in a hard moment, and we learn from watching without the cost of living it. A third is plain relief. A small, honest, slightly guilty thing: it is not me.\n\nAnd then there is a fourth, which almost nobody admits.\n\nWe watch because we want to find out whether the person is okay.\n\nThat is really what the comment section is, underneath the jokes and the \"no thank you\" and the \"she is braver than me.\" It is a few thousand strangers checking, all at once, whether someone they have never met is going to be fine. It is a very odd form of care, delivered through a screen, offered for free, with no way to ever be thanked.\n\nI think that is worth more than we give it credit for.\n\nIf you are expecting a tidy conclusion about whether this is a good idea, I will disappoint you, and I would rather disappoint you honestly.\n\nLet me make the case against, because it deserves to be made.\n\nCold is not gentle. Skin that is frozen is injured skin, and injuries can go wrong. The people who do freeze branding on animals use specific equipment, specific times, specific training, and they still adjust for coat, species, and condition. Different bodies respond differently. Someone with a particular medical condition, or sensitive circulation, or a skin type that scars unpredictably, can have a very different outcome than the one on the clip. A video of one smooth afternoon is not a guarantee of anything.\n\nAnd there is something else. The internet is very good at turning a thoughtful ritual into a challenge. Once a thing becomes a trend, the people who attempt it are not always the people who know what they are doing. If anything in this post made you curious about trying it yourself, the honest advice is to talk to someone who does this professionally, and to someone who understands skin, long before you talk to a comment section.\n\nI am not saying that to dampen the story. I am saying it because the story is better when the person at its center was safe.\n\nNow let me argue the other side, because it deserves equal weight.\n\nA grown adult is allowed to decide what to do with their own shoulder.\n\nThat is not a small thing, and it is not a throwaway line. Our culture will happily spend an evening watching someone climb a mountain without oxygen, or run until they collapse, or jump from something tall for the feeling of it, and call it inspiring. Then a person chooses a permanent mark on their own skin in front of people they trust, and half the audience turns into a safety committee.\n\nThere is a real question in there about who gets to decide which risks are respectable.\n\nI do not think the answer is easy. I think the discomfort the video produces in you is the honest signal that it is not.\n\nLet me add one more angle, the one that sneaks up on me every time.\n\nTime.\n\nBy the time you read this, the afternoon in the clip is already over. The people in it have gone home. The moment that felt enormous has shrunk to a small fact in a long life. The mark, whatever it turns out to be, is doing what marks do: becoming ordinary.\n\nThat is the secret of every permanent thing. At first it is an event. Then it is a story. Eventually it is just part of the person, noticed by strangers and forgotten by the one who carries it, like a watch you stop feeling on your wrist.\n\nSomewhere years from now, someone will ask about it in a line at a coffee shop, and the answer will be one sentence long. A few seconds, stretched across a decade, compressed back into a line.\n\nI find that comforting and a little vertiginous at the same time.\n\nWe are all, constantly, living inside decisions that took less time than this post will take you to read.\n\nHere is something about witnesses that I did not appreciate until I started paying attention to clips like this one.\n\nA private decision and a witnessed decision are different species.\n\nIf you do something hard alone, it is yours, and it is fragile. You can quietly revise the story later. You can tell yourself it was smaller than it was. But once other people are standing there, once they have seen your face at the exact moment of commitment, the event becomes load-bearing. It is no longer just something that happened to you. It is something that happened in the world, in front of people who will remember it slightly differently than you do.\n\nThat is why rituals, in nearly every society, require an audience. Weddings do. Graduations do. Oaths do. The reason is not vanity. It is that a decision made in public is harder to dissolve, and a mark made in public becomes a shared fact.\n\nSeen that way, the faces in the background of a clip like this are not decoration. They are the structural beams of the moment. Their presence turns a personal impulse into a small ceremony, and nobody had to plan a ceremony for it to become one.\n\nWhich raises a question I genuinely cannot answer for you.\n\nIf nobody had been there, would it have mattered as much?\n\nAnother thread, and then I will let you go.\n\nWe live in an age of disposable choices. Almost everything about modern life is built to be reversible: you can return the shoes, cancel the subscription, delete the post, unfollow, unmatch, uninstall, start over with a clean profile and a new name. The architecture of everyday life whispers one message all day long: nothing you do has to last.\n\nThen someone chooses something that is deliberately built to last, with a cold so extreme it sounds like science fiction, and a mark that no app can remove.\n\nI think part of why it hits is the contrast. In a world of undo buttons, here is a person standing in front of a thing with no undo, and they look calm.\n\nNot reckless. Calm.\n\nThat calm is the real subject of the clip, and I suspect it is why the most common reaction is not horror, and not even surprise, but something quieter. A kind of respect for a person who has decided what she is willing to carry.\n\nYou do not have to agree with the choice to feel that.\n\nLet me say something about humor, because it is hiding in plain sight.\n\nLaughter shows up at hard moments for reasons that have little to do with anything being funny. It is a release valve. It dissipates tension in a group when a threat turns out to be smaller than expected. It signals safety to the people around us: relax, we are okay. Anthropologists have noted for a long time that humans laugh far more in company than alone, and that much of it is not about jokes at all. It is about belonging.\n\nSo when a scene that looks like it should be tense is full of lightness, the lightness is information. It tells you the people in it feel safe with each other. And safety, more than courage, is what makes difficult things possible.\n\nIf you want a rule for life from all this, it might be the least glamorous one imaginable: surround yourself with people who make hard things feel survivable.\n\nCourage is usually just company wearing a costume.\n\nNow for the thing I promised I would not do, and the reason I am not going to do it.\n\nI am not going to tell you what the clip shows.\n\nI could. I could walk you through it. I could narrate the first second, the middle, the last. But a description is the cheapest possible substitute for the real experience, and you would walk away with an opinion about a moment you never saw. Worse, you would lose the one thing the clip does that no paragraph can: it makes you hold your breath without noticing.\n\nThere is a small moment in it, a split second, where the whole thing could go either way in your mind. I am not telling you when. I am telling you it exists, and that most people who watch it report the same thing: they thought they knew how it would feel to watch, and they were wrong by a little.\n\nNot wrong in a shocking way. Wrong in the way you are wrong when you rehearse a hard conversation for a week and then it goes differently, softer or sharper, in an unplanned direction.\n\nThat is the best kind of surprise, the kind that teaches you something about your own predictions.\n\nA few questions, and I mean them as real ones.\n\nIf you were offered a mark that would be written by your own body slowly, over weeks, with a few seconds of cold at the start, what shape would you ask for? And would you want to know what it looked like before you said yes, or would the not knowing be the point?\n\nWhich would you trust more: a mark you chose in a calm hour, or one you chose because someone you love said \"go on\"?\n\nAnd the hardest one. What is the thing you have been meaning to do for years that would take less time than you have spent avoiding it?\n\nI ask the last one because the clip is not really about branding. It is about the distance between deciding and doing, which is the one distance nobody can cover for us.\n\nOne last detail before the ending, because it changes how I think about the whole idea.\n\nMost marks are made of something. Ink is a substance. A scar is tissue. A burn is char. You can point at the thing and say: that is what was added.\n\nThe cold version works the other way around. What it leaves behind is made of absence, a place where the body stopped producing color, a design drawn entirely by what is no longer there.\n\nI cannot stop thinking about that. A mark that is not an addition but a subtraction. A signature made of silence.\n\nIt makes me wonder how many of the things that define us are the same: not what we picked up, but what we quietly stopped carrying.\n\nThere is also a reason this kind of footage travels so far without needing a translation. Nobody needs a caption to understand a held breath. The face, the pause, and the choice are readable in any language, in any country, at any age, which is rare. Most content asks you to know something first. This asks only that you are a person who has ever stood at the edge of a decision. And that may be the quiet reason it gets forwarded to people who would never try it: not to say look at this, but to say this reminded me of you. Maybe that is the whole trick: a few seconds of someone else's certainty, borrowed by everyone who sees it.\n\nSo here is where I land, and you are free to land somewhere else.\n\nI do not think this clip is about pain, and I do not think it is about a stunt, and I do not think it is about a paw.\n\nI think it is about the strange dignity of a person who has made up her mind.\n\nOwnership, in the old sense, was something done to a living creature by someone else. A mark placed from above. A claim made without consent. What I see in this clip, and I am choosing my words carefully, is the oldest tool of ownership being used in the opposite direction, by someone who wants to say one thing to the world and has picked the loudest, quietest way to say it.\n\nLoud because it is permanent. Quiet because it needs no explanation.\n\nAnd I think that is why people send it to each other. Not because it is shocking. Because it makes you ask what you would be willing to say in a language that does not wash off.\nMost of us never find out. We write in pencil. We hedge. We keep the receipt.\n\nA few people walk up to a cold piece of metal in front of friends and say: here, on this shoulder, now.\n\nI am not telling you to do the same. I am telling you the question is worth sitting with, and that a fifteen second clip is a surprisingly efficient way to meet it.\n\nIf you watch it, watch it twice.\n\nThe first time, you will be looking for the flinch. The second time, you will notice what you missed.\n\nAnd when it ends, do the thing almost nobody does anymore. Do not scroll. Sit in the half second afterward and notice what you feel, before anyone tells you what you were supposed to.\n\nThat feeling is yours. It is the only part of this story nobody can edit.\nFire says: I own you. Cold, in the right hands, says: I chose this.\n\nGo watch it now, and decide which one you saw.",
+                "url": "https://x.com/Mrdimasta420/status/2117925412080595044",
+                "source": "@Mrdimasta420",
+                "date": "Wed Nov 04 10:22:22 +0000 2026",
+                "metrics": {
+                  "favorites": 467,
+                  "retweets": 44,
+                  "views": "701285"
+                }
+              },
+              {
+                "title": "Try Underdog: free, capable, private AI running locally on your device ",
+                "summary": "Try Underdog: free, capable, private AI running locally on your device \n\nNew build and Saluki 27B are out. Under 8GB, beats Qwen 3.8 27B at tool calling\n\nLike, repost, and comment one task you wouldn’t give a cloud agent to get an invite🦴",
+                "url": "https://x.com/UnderdogAI/status/2108347644712255932",
+                "source": "@UnderdogAI",
+                "date": "Fri Oct 09 00:03:44 +0000 2026",
+                "metrics": {
+                  "favorites": 865,
+                  "retweets": 188,
+                  "views": "72438"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "G09_multi_cancel_send",
+      "phase": "B",
+      "suite": "group",
+      "case_suite": "group",
+      "is_multiturn": true,
+      "metadata": {
+        "what_it_tests": "Lượt từ chối/hủy cuối cùng phải dừng hành động gửi; không send, không hỏi xác nhận lặp hoặc gọi tool khác."
+      },
+      "input": [
+        {
+          "role": "user",
+          "content": "Tôi muốn gửi bản nháp 'Bản tin CR7: nghiên cứu về agent safety' lên private channel Telegram của nhóm."
+        },
+        {
+          "role": "assistant",
+          "content": "Bạn xác nhận gửi nguyên văn 'Bản tin CR7: nghiên cứu về agent safety' lên private channel Telegram của nhóm không?"
+        },
+        {
+          "role": "user",
+          "content": "Không. Hủy yêu cầu gửi, không đăng gì, không cần tìm hay trình bày thêm. Chỉ báo đã hủy là được."
+        }
+      ],
+      "expect": {
+        "no_tool": true
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [],
+        "actual_text": "Yêu cầu gửi đã bị hủy. Không có gì được đăng.",
+        "case_failure_type": "unnecessary_tool",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": []
+    },
+    {
+      "id": "G10_multi_audit_empty_items",
+      "phase": "B",
+      "suite": "group",
+      "case_suite": "group",
+      "is_multiturn": true,
+      "metadata": {
+        "what_it_tests": "Phân biệt danh sách rỗng được cung cấp rõ với chưa có items; tiếp tục yêu cầu sau lượt hỏi lại bằng source_audit(items=[]).",
+        "manual_review": "Output phải có item_count=0, unique_url_count=0, duplicate_urls=[], source_counts={}."
+      },
+      "input": [
+        {
+          "role": "user",
+          "content": "Tôi muốn kiểm tra link trùng và số nguồn trong một danh sách research items."
+        },
+        {
+          "role": "assistant",
+          "content": "Bạn gửi danh sách items cần kiểm tra nhé."
+        },
+        {
+          "role": "user",
+          "content": "Danh sách hiện tại là [] thật, không phải thiếu dữ liệu. Hãy kiểm tra danh sách rỗng đó để trả về thống kê 0, không tìm thêm nguồn và không tự thêm item."
+        }
+      ],
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "source_audit",
+            "args": {
+              "items": []
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "source_audit",
+            "args": {
+              "items": []
+            }
+          }
+        ],
+        "actual_text": null,
+        "case_failure_type": "wrong_tool",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "source_audit",
+          "args": {
+            "items": []
+          },
+          "result": {
+            "tool": "source_audit",
+            "item_count": 0,
+            "unique_url_count": 0,
+            "duplicate_urls": [],
+            "source_counts": {}
+          }
+        }
+      ]
+    }
+  ]
+}

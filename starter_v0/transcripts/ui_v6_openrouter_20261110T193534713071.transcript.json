@@ -1,0 +1,151 @@
+{
+  "transcript_id": "ui_v6_openrouter_20261110T193534713071",
+  "source": "streamlit_ui",
+  "version": "v6",
+  "artifact_version": "v6+p5a4f316905ed+tf0632d419cd7",
+  "prompt_hash": "5a4f316905ed25672f3d3047e4a3dd13a883ccbb85e379bb05e56198eaae15ab",
+  "tools_hash": "f0632d419cd7ddd37ccdfb523d619bc1c77d2858fe9cc475f040a49d84d5ec95",
+  "provider": "openrouter",
+  "model": "openai/gpt-4o-mini",
+  "system_prompt": "D:\\Vin AI\\K5-L3B-DAY03-CR7-ResearchAgentToolEval\\starter_v0\\artifacts\\system_prompt.md",
+  "tools": "D:\\Vin AI\\K5-L3B-DAY03-CR7-ResearchAgentToolEval\\starter_v0\\artifacts\\tools.yaml",
+  "history_window": 5,
+  "max_tool_rounds": 4,
+  "created_at": "2026-11-10T19:35:34",
+  "updated_at": "2026-11-10T19:35:43",
+  "turns": [
+    {
+      "turn_index": 1,
+      "started_at": "2026-11-10T19:35:34",
+      "user": "CR7 giải nghệ đội tuyển quốc gia chưa?",
+      "status": "answered",
+      "assistant_text": "Cristiano Ronaldo đã chính thức tuyên bố giải nghệ đội tuyển quốc gia Bồ Đào Nha. Trong thông báo trên trang cá nhân, anh cho biết: \"Đội tuyển Bồ Đào Nha sẽ mãi ở trong trái tim tôi\" và đã đến lúc anh phải \"treo áo số 7\" của đội tuyển. Ronaldo đã có một hành trình dài 23 năm với đội tuyển, ra sân 234 trận và ghi 146 bàn thắng, đồng thời góp công lớn giúp Bồ Đào Nha giành nhiều danh hiệu lớn như Euro 2016 và Nations League 2019.\n\nLiên đoàn Bóng đá Bồ Đào Nha đã bày tỏ lòng biết ơn đối với những đóng góp của Ronaldo và khẳng định rằng anh đã nâng cao vị thế của bóng đá Bồ Đào Nha trên trường quốc tế [1](https://dantri.com.vn/the-thao/cristiano-ronaldo-bat-ngo-tuyen-bo-gia-tu-doi-tuyen-bo-dao-nha-20261105173937776.htm) [2](https://baoquangninh.vn/cristiano-ronaldo-tuyen-bo-gia-tu-doi-tuyen-bo-dao-nha-sau-23-nam-gan-bo-post3426210.html).\n\nBạn có thể xem thêm thông tin chi tiết qua các bài viết từ các nguồn như Dân trí, VnExpress và Tuổi Trẻ.",
+      "rounds": [
+        {
+          "round": 1,
+          "assistant_text": null,
+          "tool_calls": [
+            {
+              "name": "lookup",
+              "args": {
+                "query": "Cristiano Ronaldo giải nghệ đội tuyển quốc gia",
+                "topic": "news"
+              }
+            }
+          ],
+          "tool_results": [
+            {
+              "tool": "lookup",
+              "args": {
+                "query": "Cristiano Ronaldo giải nghệ đội tuyển quốc gia",
+                "topic": "news"
+              },
+              "result": {
+                "tool": "web_search",
+                "query": "Cristiano Ronaldo giải nghệ đội tuyển quốc gia",
+                "topic": "news",
+                "timeframe": "week",
+                "items": [
+                  {
+                    "title": "Cristiano Ronaldo bất ngờ tuyên bố giã từ đội tuyển Bồ Đào Nha | Báo Dân trí",
+                    "url": "https://dantri.com.vn/the-thao/cristiano-ronaldo-bat-ngo-tuyen-bo-gia-tu-doi-tuyen-bo-dao-nha-20261105173937776.htm",
+                    "source": "dantri.com.vn",
+                    "summary": "Thể thao\n Bóng đá\n\n# Cristiano Ronaldo bất ngờ tuyên bố giã từ đội tuyển Bồ Đào Nha\n\nH. Long\n\nH. Long\n\n## (Dn trí) - Trong tuyên bố trên trang cá nhn, Cristiano Ronaldo đã bất ngờ tuyên bố giải nghệ ở đội tuyển Bồ Đào Nha.\n\n\"Đội tuyển Bồ Đào Nha sẽ mãi ở trong trái tim tôi\", C.Ronaldo mở đầu cho thông báo từ giã đội tuyển quốc gia của mình. Siêu sao số 7 nói thêm: \"Gửi tới những người dn Bồ Đào Nha. Đã đến lúc tôi phải treo áo số 7 ở đội tuyển Bồ Đào Nha. [...] C.Ronaldo bắt đầu khoác áo đội tuyển Bồ Đào Nha từ năm 2003. Tính tới thời điểm này, tiền đạo 41 tuổi đã ra sn 234 trận cho đội tuyển quốc gia và ghi 146 bàn thắng. CR7 đang nắm giữ đồng thời kỷ lục ra sn và ghi bàn cho đội tuyển Bồ Đào Nha.\n\nSiêu sao số 7 đã góp công lớn giúp Bồ Đào Nha giành ba danh hiệu lớn là Euro 2016, Nations League 2019 và 2025. Anh cũng là cầu thủ duy nhất trong lịch sử tham dự 6 kỳ Euro (ghi bàn ở 5 kỳ) cũng như 6 kỳ World Cup (ghi bàn ở cả 6 kỳ). [...] Hôm nay, tôi nghĩ rằng nên trao chiếc áo ấy cho thế hệ tiếp theo. Đy không phải là một quyết định dễ dàng vì có những lựa chọn không thể chỉ được quyết định bằng lý trí, mà còn phải lắng nghe tiếng nói từ trái tim\".\n\nTiền đạo sinh năm 1985 tiếp tục kể về hành trình khoác áo đội tuyển Bồ Đào Nha: \"Hành trình của tôi cùng đội tuyển Bồ Đào Nha bắt đầu từ tháng 8/2003. Đó là hành trình đã thay đổi cuộc đời của tôi mãi mãi.",
+                    "score": 0.84183896
+                  },
+                  {
+                    "title": "Cristiano Ronaldo tuyên bố giã từ đội tuyển Bồ Đào Nha sau 23 năm gắn bó",
+                    "url": "https://baoquangninh.vn/cristiano-ronaldo-tuyen-bo-gia-tu-doi-tuyen-bo-dao-nha-sau-23-nam-gan-bo-post3426210.html",
+                    "source": "baoquangninh.vn",
+                    "summary": "Sau thông báo giải nghệ quốc tế của Ronaldo, Liên đoàn Bóng đá Bồ Đào Nha bày tỏ lòng biết ơn su sắc và sự ngưỡng mộ đối với những đóng góp của anh. Liên đoàn khẳng định Ronaldo đã góp phần nng cao vị thế của bóng đá Bồ Đào Nha trên trường quốc tế, đồng thời truyền cảm hứng cho nhiều thế hệ cầu thủ trẻ.\n\n“Đối với nhiều người trong chúng ta, Cristiano Ronaldo là cầu thủ vĩ đại nhất mọi thời đại”, Liên đoàn Bóng đá Bồ Đào Nha nhấn mạnh. [...] Ronaldo cũng ghi bàn cho đội tuyển quốc gia trong 23 năm dương lịch liên tiếp, từ năm 2004 đến năm 2026. Anh là cầu thủ nam đầu tiên cán mốc 200 lần ra sn cho đội tuyển quốc gia và hiện giữ kỷ lục thế giới với 234 lần khoác áo đội tuyển. [...] Liên đoàn cũng dự kiến tổ chức một buổi lễ tri n để người hm mộ và cả đất nước có dịp tôn vinh những đóng góp của Ronaldo.\n\nGóp phần đưa bóng đá Bồ Đào Nha lên tầm cao mới\n\nRonaldo ra mắt đội tuyển quốc gia vào tháng 8/2003, khi vào sn thay huyền thoại Luís Figo trong trận giao hữu với Kazakhstan. Trước thời điểm đó, Bồ Đào Nha chưa từng giành danh hiệu lớn ở cấp đội tuyển quốc gia.",
+                    "score": 0.80014634
+                  },
+                  {
+                    "title": "NÓNG: Ronaldo giã từ sự nghiệp quốc tế - Tuổi Trẻ Online",
+                    "url": "https://tuoitre.vn/nong-ronaldo-gia-tu-su-nghiep-quoc-te-100261105180625492.htm",
+                    "source": "tuoitre.vn",
+                    "summary": "\"Gửi tới người dn Bồ Đào Nha, ngày tôi phải trao lại chiếc áo số 7 của đội tuyển quốc gia cuối cùng cũng đã đến”, Ronaldo chia sẻ trong một video đăng tải trên Instagram về quyết định giã từ tuyển quốc gia.\n\n“Tôi chưa bao giờ cảm thấy chiếc áo ấy chỉ thuộc về riêng mình. Nhưng trong suốt 23 năm qua, tôi đã có vinh dự và trách nhiệm được khoác lên mình chiếc áo đó, bảo vệ và mang nó tới những sn vận động trên khắp thế giới. [...] Trong khi đó, đợt tập trung tuyển quốc gia tiếp theo của Bồ Đào Nha sẽ diễn ra vào giữa tháng 11. Tại đy, Bồ Đào Nha sẽ chạm trán Đan Mạch (14-11) và Xứ Wales (17-11). Như vậy, án phạt của FPF không khiến Ronaldo bỏ lỡ bất kỳ trận đấu nào của tuyển Bồ Đào Nha.\n\nTuy nhiên, đến 5-11, Ronaldo đã bất ngờ tuyên bố giã từ tuyển quốc gia. Ronaldo khoác áo tuyển quốc gia từ năm 2003 đến nay đã hơn 20 năm. Trong khoảng thời gian này, anh ghi 146 bàn sau 234 trận, cùng Bồ Đào Nha vô địch Euro 2016. [...] Sau đó, Hội đồng kỷ luật của FPF đã quyết định cấm Ronaldo thi đấu cho tuyển quốc gia 1 tháng và phạt cầu thủ này 255 euro. Ronaldo rời trại tập trung tuyển quốc gia vào ngày 30-9. Như vậy, án cấm thi đấu của anh sẽ hết hạn vào ngày 30-10.",
+                    "score": 0.7447496
+                  },
+                  {
+                    "title": "Ronaldo giải nghệ, Bồ Đào Nha mất \"cỗ máy kiếm tiền” 24,5 nghìn tỷ",
+                    "url": "https://www.24h.com.vn/bong-da/ronaldo-giai-nghe-bo-dao-nha-mat-co-may-kiem-tien-245-nghin-ty-c48a1808795.html",
+                    "source": "24h.com.vn",
+                    "summary": "Daniel Sa nhận định: “Sức ảnh hưởng của thương hiệu Cristiano Ronaldo trong hoạt động quảng bá đội tuyển quốc gia trên phạm vi quốc tế là đặc biệt và rất khó để bất kỳ cầu thủ Bồ Đào Nha nào khác có thể tái tạo trong thời gian ngắn. Bồ Đào Nha không chỉ mất đi một cầu thủ xuất sắc, mà còn mất đi một trong những nhn tố khuếch đại sức mạnh thương mại của thương hiệu quốc gia trên toàn cầu”. [...] Ông phn tích: “Sau hơn hai thập kỷ cùng tạo ra giá trị cho nhau, Ronaldo sẽ phải chứng minh thương hiệu của mình vẫn có thể phát triển mà không cần đội tuyển quốc gia. Ngược lại, đội tuyển Bồ Đào Nha cũng phải chứng minh họ đủ khả năng duy trì sức mạnh thương mại mà không còn phụ thuộc vào CR7”. [...] Ở thị trường trong nước, doanh số bán vé có thể chỉ chịu ảnh hưởng hạn chế bởi người hm mộ vẫn dành tình cảm đặc biệt cho đội tuyển quốc gia, bất kể cầu thủ nào góp mặt. Nhưng tại nước ngoài, cu chuyện lại khác. Chỉ riêng sự xuất hiện của Ronaldo cũng đủ tạo ra nhu cầu theo dõi và thúc đẩy giá trị thương mại của các trận đấu có Bồ Đào Nha tham dự.\n\n### 🔥 Lời khuyên cho Bồ Đào Nha: Đừng tìm kiếm Ronaldo thứ hai",
+                    "score": 0.7190094
+                  },
+                  {
+                    "title": "Ronaldo từ giã đội tuyển Bồ Đào Nha - Báo VnExpress Thể thao",
+                    "url": "https://vnexpress.net/ronaldo-tu-gia-doi-tuyen-bo-dao-nha-5141301.html",
+                    "source": "vnexpress.net",
+                    "summary": "Quyết định chia tay đội tuyển khép lại một chương quan trọng trong sự nghiệp của Ronaldo, nhưng không đồng nghĩa anh từ bỏ tình yêu dành cho đội tuyển Bồ Đào Nha. Tiền đạo 41 tuổi khẳng định sẽ tiếp tục dõi theo, hồi hộp và ăn mừng mỗi chiến thắng của đội nhà như một người hm mộ.\n\n\"Tôi rời đội tuyển với tư thế ngẩng cao đầu, tự hào về hành trình đã đi qua và biết rằng mình đã tận hiến cho Bồ Đào Nha. Nhưng tôi sẽ không bao giờ ngừng là một trong số các bạn\", anh nhấn mạnh. [...] \"Gửi người dn Bồ Đào Nha, hôm nay đã đến lúc tôi trao lại chiếc áo số 7 của đội tuyển quốc gia\", Ronaldo đọc. \"Tôi chưa bao giờ nghĩ chiếc áo đó chỉ thuộc về riêng mình. Nhưng trong 23 năm, tôi có vinh dự và trách nhiệm khoác lên, bảo vệ và mang theo đến các sn vận động trên khắp thế giới. Giờ là lúc trao lại cho thế hệ tương lai\".\n\nRonaldo khóc sau khi Bồ Đào Nha thua Ty Ban Nha ở vòng 1/8 World Cup 2026 trên sn Dallas, Arlington, Texas, Mỹ ngày 6/7/2026. Ảnh: AFP [...] Quyết định được Ronaldo đưa ra trên các trang cá nhn chiều 5/11, một ngày trước khi HLV Jorge Jesus công bố danh sách đội tuyển Bồ Đào Nha chuẩn bị cho các trận đấu tháng 11.",
+                    "score": 0.69249696
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "assistant_text": "Cristiano Ronaldo đã chính thức tuyên bố giải nghệ đội tuyển quốc gia Bồ Đào Nha. Trong thông báo trên trang cá nhân, anh cho biết: \"Đội tuyển Bồ Đào Nha sẽ mãi ở trong trái tim tôi\" và đã đến lúc anh phải \"treo áo số 7\" của đội tuyển. Ronaldo đã có một hành trình dài 23 năm với đội tuyển, ra sân 234 trận và ghi 146 bàn thắng, đồng thời góp công lớn giúp Bồ Đào Nha giành nhiều danh hiệu lớn như Euro 2016 và Nations League 2019.\n\nLiên đoàn Bóng đá Bồ Đào Nha đã bày tỏ lòng biết ơn đối với những đóng góp của Ronaldo và khẳng định rằng anh đã nâng cao vị thế của bóng đá Bồ Đào Nha trên trường quốc tế [1](https://dantri.com.vn/the-thao/cristiano-ronaldo-bat-ngo-tuyen-bo-gia-tu-doi-tuyen-bo-dao-nha-20261105173937776.htm) [2](https://baoquangninh.vn/cristiano-ronaldo-tuyen-bo-gia-tu-doi-tuyen-bo-dao-nha-sau-23-nam-gan-bo-post3426210.html).\n\nBạn có thể xem thêm thông tin chi tiết qua các bài viết từ các nguồn như Dân trí, VnExpress và Tuổi Trẻ.",
+          "tool_calls": [],
+          "tool_results": []
+        }
+      ],
+      "tool_events": [
+        {
+          "tool": "lookup",
+          "args": {
+            "query": "Cristiano Ronaldo giải nghệ đội tuyển quốc gia",
+            "topic": "news"
+          },
+          "result": {
+            "tool": "web_search",
+            "query": "Cristiano Ronaldo giải nghệ đội tuyển quốc gia",
+            "topic": "news",
+            "timeframe": "week",
+            "items": [
+              {
+                "title": "Cristiano Ronaldo bất ngờ tuyên bố giã từ đội tuyển Bồ Đào Nha | Báo Dân trí",
+                "url": "https://dantri.com.vn/the-thao/cristiano-ronaldo-bat-ngo-tuyen-bo-gia-tu-doi-tuyen-bo-dao-nha-20261105173937776.htm",
+                "source": "dantri.com.vn",
+                "summary": "Thể thao\n Bóng đá\n\n# Cristiano Ronaldo bất ngờ tuyên bố giã từ đội tuyển Bồ Đào Nha\n\nH. Long\n\nH. Long\n\n## (Dn trí) - Trong tuyên bố trên trang cá nhn, Cristiano Ronaldo đã bất ngờ tuyên bố giải nghệ ở đội tuyển Bồ Đào Nha.\n\n\"Đội tuyển Bồ Đào Nha sẽ mãi ở trong trái tim tôi\", C.Ronaldo mở đầu cho thông báo từ giã đội tuyển quốc gia của mình. Siêu sao số 7 nói thêm: \"Gửi tới những người dn Bồ Đào Nha. Đã đến lúc tôi phải treo áo số 7 ở đội tuyển Bồ Đào Nha. [...] C.Ronaldo bắt đầu khoác áo đội tuyển Bồ Đào Nha từ năm 2003. Tính tới thời điểm này, tiền đạo 41 tuổi đã ra sn 234 trận cho đội tuyển quốc gia và ghi 146 bàn thắng. CR7 đang nắm giữ đồng thời kỷ lục ra sn và ghi bàn cho đội tuyển Bồ Đào Nha.\n\nSiêu sao số 7 đã góp công lớn giúp Bồ Đào Nha giành ba danh hiệu lớn là Euro 2016, Nations League 2019 và 2025. Anh cũng là cầu thủ duy nhất trong lịch sử tham dự 6 kỳ Euro (ghi bàn ở 5 kỳ) cũng như 6 kỳ World Cup (ghi bàn ở cả 6 kỳ). [...] Hôm nay, tôi nghĩ rằng nên trao chiếc áo ấy cho thế hệ tiếp theo. Đy không phải là một quyết định dễ dàng vì có những lựa chọn không thể chỉ được quyết định bằng lý trí, mà còn phải lắng nghe tiếng nói từ trái tim\".\n\nTiền đạo sinh năm 1985 tiếp tục kể về hành trình khoác áo đội tuyển Bồ Đào Nha: \"Hành trình của tôi cùng đội tuyển Bồ Đào Nha bắt đầu từ tháng 8/2003. Đó là hành trình đã thay đổi cuộc đời của tôi mãi mãi.",
+                "score": 0.84183896
+              },
+              {
+                "title": "Cristiano Ronaldo tuyên bố giã từ đội tuyển Bồ Đào Nha sau 23 năm gắn bó",
+                "url": "https://baoquangninh.vn/cristiano-ronaldo-tuyen-bo-gia-tu-doi-tuyen-bo-dao-nha-sau-23-nam-gan-bo-post3426210.html",
+                "source": "baoquangninh.vn",
+                "summary": "Sau thông báo giải nghệ quốc tế của Ronaldo, Liên đoàn Bóng đá Bồ Đào Nha bày tỏ lòng biết ơn su sắc và sự ngưỡng mộ đối với những đóng góp của anh. Liên đoàn khẳng định Ronaldo đã góp phần nng cao vị thế của bóng đá Bồ Đào Nha trên trường quốc tế, đồng thời truyền cảm hứng cho nhiều thế hệ cầu thủ trẻ.\n\n“Đối với nhiều người trong chúng ta, Cristiano Ronaldo là cầu thủ vĩ đại nhất mọi thời đại”, Liên đoàn Bóng đá Bồ Đào Nha nhấn mạnh. [...] Ronaldo cũng ghi bàn cho đội tuyển quốc gia trong 23 năm dương lịch liên tiếp, từ năm 2004 đến năm 2026. Anh là cầu thủ nam đầu tiên cán mốc 200 lần ra sn cho đội tuyển quốc gia và hiện giữ kỷ lục thế giới với 234 lần khoác áo đội tuyển. [...] Liên đoàn cũng dự kiến tổ chức một buổi lễ tri n để người hm mộ và cả đất nước có dịp tôn vinh những đóng góp của Ronaldo.\n\nGóp phần đưa bóng đá Bồ Đào Nha lên tầm cao mới\n\nRonaldo ra mắt đội tuyển quốc gia vào tháng 8/2003, khi vào sn thay huyền thoại Luís Figo trong trận giao hữu với Kazakhstan. Trước thời điểm đó, Bồ Đào Nha chưa từng giành danh hiệu lớn ở cấp đội tuyển quốc gia.",
+                "score": 0.80014634
+              },
+              {
+                "title": "NÓNG: Ronaldo giã từ sự nghiệp quốc tế - Tuổi Trẻ Online",
+                "url": "https://tuoitre.vn/nong-ronaldo-gia-tu-su-nghiep-quoc-te-100261105180625492.htm",
+                "source": "tuoitre.vn",
+                "summary": "\"Gửi tới người dn Bồ Đào Nha, ngày tôi phải trao lại chiếc áo số 7 của đội tuyển quốc gia cuối cùng cũng đã đến”, Ronaldo chia sẻ trong một video đăng tải trên Instagram về quyết định giã từ tuyển quốc gia.\n\n“Tôi chưa bao giờ cảm thấy chiếc áo ấy chỉ thuộc về riêng mình. Nhưng trong suốt 23 năm qua, tôi đã có vinh dự và trách nhiệm được khoác lên mình chiếc áo đó, bảo vệ và mang nó tới những sn vận động trên khắp thế giới. [...] Trong khi đó, đợt tập trung tuyển quốc gia tiếp theo của Bồ Đào Nha sẽ diễn ra vào giữa tháng 11. Tại đy, Bồ Đào Nha sẽ chạm trán Đan Mạch (14-11) và Xứ Wales (17-11). Như vậy, án phạt của FPF không khiến Ronaldo bỏ lỡ bất kỳ trận đấu nào của tuyển Bồ Đào Nha.\n\nTuy nhiên, đến 5-11, Ronaldo đã bất ngờ tuyên bố giã từ tuyển quốc gia. Ronaldo khoác áo tuyển quốc gia từ năm 2003 đến nay đã hơn 20 năm. Trong khoảng thời gian này, anh ghi 146 bàn sau 234 trận, cùng Bồ Đào Nha vô địch Euro 2016. [...] Sau đó, Hội đồng kỷ luật của FPF đã quyết định cấm Ronaldo thi đấu cho tuyển quốc gia 1 tháng và phạt cầu thủ này 255 euro. Ronaldo rời trại tập trung tuyển quốc gia vào ngày 30-9. Như vậy, án cấm thi đấu của anh sẽ hết hạn vào ngày 30-10.",
+                "score": 0.7447496
+              },
+              {
+                "title": "Ronaldo giải nghệ, Bồ Đào Nha mất \"cỗ máy kiếm tiền” 24,5 nghìn tỷ",
+                "url": "https://www.24h.com.vn/bong-da/ronaldo-giai-nghe-bo-dao-nha-mat-co-may-kiem-tien-245-nghin-ty-c48a1808795.html",
+                "source": "24h.com.vn",
+                "summary": "Daniel Sa nhận định: “Sức ảnh hưởng của thương hiệu Cristiano Ronaldo trong hoạt động quảng bá đội tuyển quốc gia trên phạm vi quốc tế là đặc biệt và rất khó để bất kỳ cầu thủ Bồ Đào Nha nào khác có thể tái tạo trong thời gian ngắn. Bồ Đào Nha không chỉ mất đi một cầu thủ xuất sắc, mà còn mất đi một trong những nhn tố khuếch đại sức mạnh thương mại của thương hiệu quốc gia trên toàn cầu”. [...] Ông phn tích: “Sau hơn hai thập kỷ cùng tạo ra giá trị cho nhau, Ronaldo sẽ phải chứng minh thương hiệu của mình vẫn có thể phát triển mà không cần đội tuyển quốc gia. Ngược lại, đội tuyển Bồ Đào Nha cũng phải chứng minh họ đủ khả năng duy trì sức mạnh thương mại mà không còn phụ thuộc vào CR7”. [...] Ở thị trường trong nước, doanh số bán vé có thể chỉ chịu ảnh hưởng hạn chế bởi người hm mộ vẫn dành tình cảm đặc biệt cho đội tuyển quốc gia, bất kể cầu thủ nào góp mặt. Nhưng tại nước ngoài, cu chuyện lại khác. Chỉ riêng sự xuất hiện của Ronaldo cũng đủ tạo ra nhu cầu theo dõi và thúc đẩy giá trị thương mại của các trận đấu có Bồ Đào Nha tham dự.\n\n### 🔥 Lời khuyên cho Bồ Đào Nha: Đừng tìm kiếm Ronaldo thứ hai",
+                "score": 0.7190094
+              },
+              {
+                "title": "Ronaldo từ giã đội tuyển Bồ Đào Nha - Báo VnExpress Thể thao",
+                "url": "https://vnexpress.net/ronaldo-tu-gia-doi-tuyen-bo-dao-nha-5141301.html",
+                "source": "vnexpress.net",
+                "summary": "Quyết định chia tay đội tuyển khép lại một chương quan trọng trong sự nghiệp của Ronaldo, nhưng không đồng nghĩa anh từ bỏ tình yêu dành cho đội tuyển Bồ Đào Nha. Tiền đạo 41 tuổi khẳng định sẽ tiếp tục dõi theo, hồi hộp và ăn mừng mỗi chiến thắng của đội nhà như một người hm mộ.\n\n\"Tôi rời đội tuyển với tư thế ngẩng cao đầu, tự hào về hành trình đã đi qua và biết rằng mình đã tận hiến cho Bồ Đào Nha. Nhưng tôi sẽ không bao giờ ngừng là một trong số các bạn\", anh nhấn mạnh. [...] \"Gửi người dn Bồ Đào Nha, hôm nay đã đến lúc tôi trao lại chiếc áo số 7 của đội tuyển quốc gia\", Ronaldo đọc. \"Tôi chưa bao giờ nghĩ chiếc áo đó chỉ thuộc về riêng mình. Nhưng trong 23 năm, tôi có vinh dự và trách nhiệm khoác lên, bảo vệ và mang theo đến các sn vận động trên khắp thế giới. Giờ là lúc trao lại cho thế hệ tương lai\".\n\nRonaldo khóc sau khi Bồ Đào Nha thua Ty Ban Nha ở vòng 1/8 World Cup 2026 trên sn Dallas, Arlington, Texas, Mỹ ngày 6/7/2026. Ảnh: AFP [...] Quyết định được Ronaldo đưa ra trên các trang cá nhn chiều 5/11, một ngày trước khi HLV Jorge Jesus công bố danh sách đội tuyển Bồ Đào Nha chuẩn bị cho các trận đấu tháng 11.",
+                "score": 0.69249696
+              }
+            ]
+          }
+        }
+      ],
+      "ended_at": "2026-11-10T19:35:43"
+    }
+  ]
+}

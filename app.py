@@ -1,124 +1,409 @@
+"""Giao diện Streamlit cho Research Agent — chạy: streamlit run app.py (từ thư mục gốc repo)."""
 from __future__ import annotations
 
 import json
+import os
 import sys
+import uuid
+from datetime import datetime
 from pathlib import Path
 
 import streamlit as st
-
 
 ROOT = Path(__file__).resolve().parent
 AGENT_ROOT = ROOT / "starter_v0"
 if str(AGENT_ROOT) not in sys.path:
     sys.path.insert(0, str(AGENT_ROOT))
 
-from agent import ResearchAgent  # pyright: ignore[reportMissingImports]
-from env_loader import load_lab_env  # pyright: ignore[reportMissingImports]
-from providers import make_provider  # pyright: ignore[reportMissingImports]
-from tools import load_tool_declarations, to_openai_tools  # pyright: ignore[reportMissingImports]
-
+from chat import now_iso  # noqa: E402  # pyright: ignore[reportMissingImports]
+from env_loader import load_lab_env  # noqa: E402  # pyright: ignore[reportMissingImports]
+from providers import make_provider  # noqa: E402  # pyright: ignore[reportMissingImports]
+from tools import load_tool_declarations, to_openai_tools  # noqa: E402  # pyright: ignore[reportMissingImports]
+import ui_core  # noqa: E402  # pyright: ignore[reportMissingImports]
 
 load_lab_env(AGENT_ROOT)
 
-st.set_page_config(page_title="AI Agent Group Demo", page_icon="🤖")
-st.title("🤖 AI Research & Task Agent")
-st.caption("Gửi yêu cầu nghiên cứu; agent sẽ chọn và chạy các công cụ phù hợp.")
+PROMPT_PATH = AGENT_ROOT / "artifacts" / "system_prompt.md"
+TOOLS_PATH = AGENT_ROOT / "artifacts" / "tools.yaml"
+PROVIDERS = ["openrouter", "openai", "anthropic", "gemini", "ollama"]
+PROVIDER_KEYS = {
+    "openrouter": "OPENROUTER_API_KEY", "openai": "OPENAI_API_KEY", "anthropic": "ANTHROPIC_API_KEY",
+    "gemini": "GEMINI_API_KEY", "ollama": None,
+}
+SAMPLES = [
+    ("📰", "Tin AI hôm nay", "Tìm trên web tin tức AI hôm nay"),
+    ("🐦", "Tweet theo tài khoản", "3 tweet mới nhất của Sam Altman là gì?"),
+    ("🔥", "Tweet nổi bật", "Tìm các tweet nổi bật nhất về tool calling"),
+    ("❓", "Thiếu thông tin", "Tóm tắt 5 tweet mới nhất giúp mình"),
+    ("🔗", "Kiểm tra link trùng", "Kiểm tra link trùng trong danh sách: https://openai.com/blog/a, https://www.openai.com/blog/a/, https://arxiv.org/abs/2401.01234"),
+    ("📣", "Đăng Telegram", "Đăng bản tin 'AI hôm nay: OpenAI ra mắt model mới' lên Telegram giúp mình"),
+]
+TOOL_ICONS = {
+    "clarify": "❓", "timeline": "🐦", "social_search": "🔎", "lookup": "🌐", "fetch": "📄",
+    "format": "📝", "send": "📣", "policy": "📚", "papers": "🎓", "paper_text": "📑", "source_audit": "🧮",
+}
+
+st.set_page_config(page_title="CR7 Research Agent", page_icon="🔬", layout="wide",
+                   initial_sidebar_state="expanded")
+st.markdown(
+    """
+<style>
+.block-container {padding-top: 2.2rem; padding-bottom: 7rem; max-width: 1100px;}
+[data-testid="stChatMessage"] {border-radius: 14px; padding: .55rem .9rem;}
+.sample-hint {opacity: .7; font-size: .95rem; margin: -.3rem 0 1rem;}
+.card-title {font-weight: 600; font-size: 1rem; margin-bottom: .15rem;}
+.card-text {opacity: .7; font-size: .88rem; line-height: 1.35; min-height: 2.6em;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;}
+.pill {display:inline-block; padding:.1rem .55rem; border-radius:999px; font-size:.78rem;
+       border:1px solid rgba(128,128,128,.35); margin-right:.3rem; opacity:.85}
+</style>
+""",
+    unsafe_allow_html=True,
+)
+
+
+# --------------------------------------------------------------------------- state
+
+
+def _new_conversation() -> str:
+    cid = uuid.uuid4().hex[:8]
+    st.session_state.conversations[cid] = {
+        "title": "Cuộc trò chuyện mới", "messages": [], "pending": None,
+        "transcript_path": None, "transcript": None,
+        "created": datetime.now().strftime("%H:%M · %d/%m/%Y"),
+    }
+    st.session_state.active = cid
+    return cid
+
+
+if "conversations" not in st.session_state:
+    st.session_state.conversations = {}
+    _new_conversation()
+if "queued" not in st.session_state:
+    st.session_state.queued = None
+
+
+def active_conv() -> dict:
+    return st.session_state.conversations[st.session_state.active]
+
+
+# --------------------------------------------------------------------------- sidebar
+
 
 with st.sidebar:
-    st.header("Cấu hình agent")
-    provider_name = st.selectbox(
-        "AI provider",
-        options=["openrouter", "openai", "anthropic", "gemini", "ollama"],
-        format_func=lambda value: value.title(),
-    )
-    provider = make_provider(provider_name)
-    model = st.text_input(
-        "Model (để trống dùng mặc định)",
-        placeholder=getattr(provider, "default_model", ""),
-    ).strip()
-    st.caption("API key và cấu hình được đọc từ starter_v0/.env.")
-    if st.button("Xóa hội thoại", use_container_width=True):
-        st.session_state.messages = []
+    st.markdown("## 🔬 CR7 Research Agent")
+    if st.button("➕ Cuộc trò chuyện mới", width="stretch", type="primary"):
+        _new_conversation()
         st.rerun()
 
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-for index, message in enumerate(st.session_state.messages):
-    with st.chat_message(message["role"]):
-        if message.get("error"):
-            st.error(message["content"])
-        else:
-            st.markdown(message["content"])
-
-        tool_results = message.get("tool_results")
-        if tool_results:
-            with st.expander("Kết quả công cụ"):
-                st.code(
-                    json.dumps(tool_results, ensure_ascii=False, indent=2, default=str),
-                    language="json",
-                )
-
-        if st.button("Xóa", key=f"delete_{index}", help="Xóa tin nhắn này"):
-            st.session_state.messages.pop(index)
+    st.caption("Lịch sử")
+    for cid, conv in reversed(list(st.session_state.conversations.items())):
+        label = ("▸ " if cid == st.session_state.active else "") + conv["title"]
+        if st.button(label, key=f"conv_{cid}", width="stretch"):
+            st.session_state.active = cid
             st.rerun()
 
-if prompt := st.chat_input("Nhập yêu cầu của bạn..."):
-    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.divider()
+    with st.expander("⚙️ Cấu hình agent", expanded=False):
+        provider_name = st.selectbox("Provider", PROVIDERS, index=0, format_func=str.title)
+        provider = make_provider(provider_name)
+        default_model = getattr(provider, "default_model", "") or ""
+        model = st.text_input("Model", placeholder=default_model, help="Để trống để dùng model mặc định.").strip() or None
+        version_label = st.text_input("Nhãn version", value=ui_core.latest_version_label(),
+                                      help="Ghi vào transcript để đối chiếu với version_log.csv.")
+        history_window = st.slider("Số cặp hội thoại nhớ", 1, 10, 5)
+        max_rounds = st.slider("Số vòng gọi tool tối đa", 1, 6, 4)
 
-    try:
-        system_prompt = (AGENT_ROOT / "artifacts" / "system_prompt.md").read_text(
-            encoding="utf-8"
-        )
-        declarations = load_tool_declarations(
-            AGENT_ROOT / "artifacts" / "tools.yaml"
-        )
-        agent = ResearchAgent(
-            provider,
-            system_prompt=system_prompt,
-            tools=to_openai_tools(declarations),
-            model=model or None,
-        )
-        conversation = [
-            {"role": item["role"], "content": item["content"]}
-            for item in st.session_state.messages
-            if item["role"] in {"user", "assistant"}
-        ]
+    key_env = PROVIDER_KEYS.get(provider_name)
+    key_ok = key_env is None or bool(os.getenv(key_env))
+    tg_ok = bool(os.getenv("TELEGRAM_BOT_TOKEN") and os.getenv("TELEGRAM_CHAT_ID"))
+    artifact = ui_core.build_artifact_version(version_label or "ui", PROMPT_PATH, TOOLS_PATH)
+    st.markdown(
+        f"{'🟢' if key_ok else '🔴'} API key {provider_name}  \n"
+        f"{'🟢' if tg_ok else '⚪'} Telegram {'đã cấu hình' if tg_ok else 'chưa cấu hình'}  \n"
+        f"<span class='pill'>{model or default_model}</span><span class='pill'>{artifact.artifact_version}</span>",
+        unsafe_allow_html=True,
+    )
+    conv = active_conv()
+    if conv["transcript_path"] and Path(conv["transcript_path"]).exists():
+        st.download_button("⬇️ Tải transcript JSON", Path(conv["transcript_path"]).read_bytes(),
+                           file_name=Path(conv["transcript_path"]).name, mime="application/json",
+                           width="stretch")
+        st.caption(f"Đã lưu: `starter_v0/transcripts/{Path(conv['transcript_path']).name}`")
 
-        with st.spinner("Agent đang xử lý yêu cầu..."):
-            result = agent.run(conversation)
 
-        response = (result.text or "").strip()
-        if not response:
-            clarification = next(
-                (
-                    item.get("result", {}).get("question")
-                    for item in result.tool_results
-                    if isinstance(item.get("result"), dict)
-                    and item["result"].get("awaiting_user")
-                ),
-                None,
-            )
-            response = clarification or (
-                "Agent đã gọi công cụ. Xem kết quả chi tiết bên dưới."
-                if result.tool_calls
-                else "Agent chưa trả về nội dung."
-            )
+# --------------------------------------------------------------------------- chat helpers
 
-        st.session_state.messages.append(
-            {
-                "role": "assistant",
-                "content": response,
-                "tool_results": result.tool_results,
-            }
+
+def render_tool_events(events: list[dict]) -> None:
+    if not events:
+        return
+    errors = [e for e in events if ui_core.tool_error(e)]
+    names = ", ".join(dict.fromkeys(e.get("tool", "?") for e in events))
+    label = f"🔧 Đã dùng {len(events)} công cụ: {names}" + (f" · ⚠️ {len(errors)} lỗi" if errors else "")
+    with st.expander(label, expanded=bool(errors)):
+        for event in events:
+            name = event.get("tool", "?")
+            st.markdown(f"**{TOOL_ICONS.get(name, '🔧')} `{name}`**")
+            st.code(json.dumps(event.get("args", {}), ensure_ascii=False, indent=2), language="json")
+            err = ui_core.tool_error(event)
+            if err:
+                st.error(f"Lỗi công cụ: {err}")
+            result = event.get("result")
+            if isinstance(result, dict) and isinstance(result.get("items"), list) and result["items"]:
+                for item in result["items"][:8]:
+                    title = item.get("title") or item.get("text") or item.get("url") or "(không tiêu đề)"
+                    url = item.get("url")
+                    st.markdown(f"- [{title}]({url})" if url else f"- {str(title)[:200]}")
+            with st.popover("Xem JSON kết quả"):
+                st.json(result, expanded=False)
+
+
+def render_message(msg: dict) -> None:
+    avatar = "🧑" if msg["role"] == "user" else "🔬"
+    with st.chat_message(msg["role"], avatar=avatar):
+        if msg.get("status") == "provider_error":
+            st.warning(msg["content"])
+            st.caption(msg.get("error", ""))
+        elif msg.get("status") == "waiting_for_user":
+            st.info(f"**Cần bạn bổ sung:** {msg['content']}")
+        else:
+            st.markdown(msg["content"])
+        render_tool_events(msg.get("tool_events") or [])
+
+
+def history_for_model(messages: list[dict]) -> list[dict[str, str]]:
+    return [{"role": m["role"], "content": m["content"]} for m in messages
+            if m["role"] in {"user", "assistant"} and m.get("status") != "provider_error"]
+
+
+def handle_user_message(text: str, *, regenerate: bool = False) -> None:
+    conv = active_conv()
+    if not regenerate:
+        conv["messages"].append({"role": "user", "content": text})
+        if conv["title"] == "Cuộc trò chuyện mới":
+            conv["title"] = ui_core.conversation_title(text)
+        render_message(conv["messages"][-1])
+    conv["pending"] = None
+
+    if conv["transcript"] is None:
+        path, transcript = ui_core.new_transcript(
+            version=version_label or "ui", provider_name=provider_name, model=model or default_model,
+            history_window=history_window, max_tool_rounds=max_rounds)
+        conv["transcript_path"], conv["transcript"] = str(path), transcript
+
+    with st.chat_message("assistant", avatar="🔬"):
+        status = st.status("Đang suy nghĩ…", expanded=False)
+
+        def on_event(kind: str, data: dict) -> None:
+            if kind == "tool_call":
+                status.update(label=f"{TOOL_ICONS.get(data['name'], '🔧')} Đang chạy `{data['name']}`…")
+                status.write(f"`{data['name']}` {json.dumps(data['args'], ensure_ascii=False)}")
+            elif kind == "tool_result" and ui_core.tool_error(data):
+                status.write(f"⚠️ `{data.get('tool')}` lỗi: {ui_core.tool_error(data)}")
+            elif kind == "thinking" and data["round"] > 1:
+                status.update(label="Đang tổng hợp câu trả lời…")
+
+        started = now_iso()
+        result = ui_core.run_turn(
+            provider=provider,
+            system_prompt=PROMPT_PATH.read_text(encoding="utf-8"),
+            tools=to_openai_tools(load_tool_declarations(TOOLS_PATH)),
+            history=history_for_model(conv["messages"][:-1]),
+            user_text=conv["messages"][-1]["content"],
+            model=model,
+            history_window=history_window,
+            max_tool_rounds=max_rounds,
+            on_event=on_event,
         )
-    except Exception as exc:
-        st.session_state.messages.append(
-            {
-                "role": "assistant",
-                "content": f"Lỗi khi gọi agent: {type(exc).__name__}: {exc}",
-                "error": True,
-            }
-        )
+        status.update(label="Xong" if result.status != "provider_error" else "Lỗi provider",
+                      state="complete" if result.status != "provider_error" else "error")
 
+    ui_core.record_turn(Path(conv["transcript_path"]), conv["transcript"], conv["messages"][-1]["content"],
+                        result, started)
+    conv["messages"].append({
+        "role": "assistant", "content": result.assistant_text, "status": result.status,
+        "tool_events": result.tool_events, "error": result.error,
+    })
+    conv["pending"] = result.pending
     st.rerun()
+
+
+# --------------------------------------------------------------------------- pages
+# Mỗi trang là một hàm; st.navigation(position="top") đặt thanh điều hướng cố định trên header
+# (không cuộn theo nội dung), mỗi trang có URL riêng: /chat, /benchmark, /tools.
+
+
+def page_chat() -> None:
+    conv = active_conv()
+    if conv["messages"]:
+        asked = sum(1 for m in conv["messages"] if m["role"] == "user")
+        st.markdown(f"### {conv['title']}")
+        st.caption(f"{conv.get('created', '')} · {asked} câu hỏi · {artifact.artifact_version}")
+    else:
+        st.markdown("## Xin chào 👋 Mình có thể giúp bạn nghiên cứu gì hôm nay?")
+        st.markdown("<div class='sample-hint'>Tìm tin web, đọc tweet theo tài khoản hoặc chủ đề, đọc URL, "
+                    "kiểm tra link trùng và đăng Telegram (luôn hỏi xác nhận trước). Chọn một gợi ý để thử:</div>",
+                    unsafe_allow_html=True)
+        cols = st.columns(3, gap="medium")
+        for i, (icon, title, prompt_text) in enumerate(SAMPLES):
+            with cols[i % 3].container(border=True):
+                st.markdown(f"<div class='card-title'>{icon} {title}</div>"
+                            f"<div class='card-text'>{prompt_text}</div>", unsafe_allow_html=True)
+                if st.button("Hỏi thử →", key=f"sample_{i}", help=prompt_text, width="stretch"):
+                    st.session_state.queued = prompt_text
+                    st.rerun()
+
+    for msg in conv["messages"]:
+        render_message(msg)
+
+    # Hành động sau câu trả lời cuối: trả lời nhanh cho clarify, tạo lại, sao chép
+    last = conv["messages"][-1] if conv["messages"] else None
+    if last and last["role"] == "assistant":
+        replies = ui_core.quick_replies(conv["pending"])
+        with st.container(horizontal=True, gap="small"):
+            for i, reply in enumerate(replies):
+                if st.button(reply, key=f"qr_{i}", type="primary" if i == 0 else "secondary"):
+                    st.session_state.queued = reply
+                    st.rerun()
+            if st.button("🔄 Tạo lại", help="Chạy lại câu hỏi cuối", type="tertiary"):
+                conv["messages"].pop()
+                st.session_state.queued = ("__regenerate__", conv["messages"][-1]["content"])
+                st.rerun()
+            with st.popover("📋 Sao chép", type="tertiary"):
+                st.code(last["content"], language=None, wrap_lines=True)
+
+    placeholder = "Trả lời câu hỏi của agent…" if conv["pending"] else "Hỏi agent về tin tức, tweet, URL…"
+    typed = st.chat_input(placeholder)
+    queued, st.session_state.queued = st.session_state.queued, None
+    if typed:
+        handle_user_message(typed)
+    elif isinstance(queued, tuple):
+        handle_user_message(queued[1], regenerate=True)
+    elif queued:
+        handle_user_message(queued)
+
+def page_benchmark() -> None:
+    import altair as alt
+    import pandas as pd
+
+    suite = st.radio("Bộ eval", ["base", "group"], horizontal=True,
+                     format_func=lambda s: "Base (20 case)" if s == "base" else "Group (10 case nhóm)")
+    runs = ui_core.load_runs(ui_core.RUNS_DIR, suite)
+    if not runs:
+        st.info("Chưa có run hợp lệ cho bộ này trong `starter_v0/runs/`.")
+    else:
+        all_versions = list(runs)
+        default = [v for v in all_versions if v in {"v0", "v1", "v2", "v3"}] or all_versions
+        chosen = st.multiselect("Version so sánh", all_versions, default=default)
+        runs = {v: runs[v] for v in all_versions if v in chosen}
+        if runs:
+            rows = ui_core.metric_rows(runs)
+            first, last_row = rows[0], rows[-1]
+            kpis = st.columns(len(ui_core.METRICS))
+            for col, (key, label) in zip(kpis, ui_core.METRICS):
+                value, base = last_row.get(key), first.get(key)
+                col.metric(f"{label} · {last_row['version']}", "—" if value is None else f"{value:.0%}",
+                           None if value is None or base is None or len(rows) == 1
+                           else f"{(value - base) * 100:+.0f} điểm so với {first['version']}")
+
+            long = pd.DataFrame([
+                {"version": r["version"], "metric": label, "value": r[key]}
+                for r in rows for key, label in ui_core.METRICS if r[key] is not None
+            ])
+            order = list(runs)
+            bars = (
+                alt.Chart(long)
+                .mark_bar(color="#2a78d6", cornerRadiusTopLeft=4, cornerRadiusTopRight=4, size=26)
+                .encode(
+                    x=alt.X("version:N", sort=order, title=None, axis=alt.Axis(labelAngle=0)),
+                    y=alt.Y("value:Q", scale=alt.Scale(domain=[0, 1]), axis=alt.Axis(format="%", grid=True,
+                            gridOpacity=0.25), title=None),
+                    tooltip=[alt.Tooltip("version:N"), alt.Tooltip("metric:N"),
+                             alt.Tooltip("value:Q", format=".0%")],
+                )
+            )
+            labels = bars.mark_text(dy=-8, fontSize=11).encode(text=alt.Text("value:Q", format=".0%"),
+                                                               color=alt.value("#888"))
+            st.markdown("#### Thông số theo version")
+            st.altair_chart(
+                alt.layer(bars, labels, data=long).properties(width=210, height=190)
+                .facet(column=alt.Column("metric:N", title=None, sort=[l for _, l in ui_core.METRICS]))
+                .configure_view(stroke=None),
+                width="content",
+            )
+
+            st.markdown("#### Bảng số liệu")
+            table = pd.DataFrame(rows)[["version", "passed", "case_accuracy", "tool_routing_accuracy",
+                                        "argument_accuracy", "multiturn_accuracy", "delta", "artifact_version",
+                                        "run_file"]]
+            st.dataframe(
+                table, hide_index=True, width="stretch",
+                column_config={
+                    "case_accuracy": st.column_config.NumberColumn("Case acc.", format="percent"),
+                    "tool_routing_accuracy": st.column_config.NumberColumn("Routing", format="percent"),
+                    "argument_accuracy": st.column_config.NumberColumn("Args", format="percent"),
+                    "multiturn_accuracy": st.column_config.NumberColumn("Multi-turn", format="percent"),
+                    "delta": st.column_config.NumberColumn("Δ case acc.", format="%+.2f"),
+                    "passed": "Pass", "artifact_version": "Artifact", "run_file": "Run file",
+                },
+            )
+
+            st.markdown("#### Pass / fail từng case")
+            cells = pd.DataFrame(ui_core.case_matrix(runs))
+            cells["kết quả"] = cells["passed"].map({True: "Pass", False: "Fail"})
+            cells["ký hiệu"] = cells["passed"].map({True: "✓", False: "✗"})
+            base_chart = alt.Chart(cells).encode(
+                x=alt.X("version:N", sort=order, title=None, axis=alt.Axis(orient="top", labelAngle=0)),
+                y=alt.Y("case:N", title=None, sort=sorted(cells["case"].unique()),
+                        axis=alt.Axis(labelOverlap=False, labelLimit=260, labelFontSize=11)),
+            )
+            heat = base_chart.mark_rect(cornerRadius=3, stroke="white", strokeWidth=2).encode(
+                color=alt.Color("kết quả:N", scale=alt.Scale(domain=["Pass", "Fail"], range=["#0ca30c", "#d03b3b"]),
+                                legend=alt.Legend(orient="bottom", title=None)),
+                tooltip=["case", "version", "kết quả", "failure_type", "failures"],
+            )
+            marks = base_chart.mark_text(color="white", fontSize=13, fontWeight="bold").encode(text="ký hiệu:N")
+            st.altair_chart((heat + marks).properties(height=26 * cells["case"].nunique() + 40),
+                            width="stretch")
+
+            fails = cells[~cells["passed"]]
+            if not fails.empty:
+                with st.expander(f"Chi tiết {len(fails)} lượt fail"):
+                    st.dataframe(fails[["version", "case", "failure_type", "failures"]], hide_index=True,
+                                 width="stretch")
+
+            log = [r for r in ui_core.read_version_log() if r.get("version") in runs]
+            if log:
+                st.markdown("#### Giả thuyết từng version (version_log.csv)")
+                st.dataframe(pd.DataFrame(log)[["version", "changed_artifact", "hypothesis", "metric_before",
+                                                "metric_after"]], hide_index=True, width="stretch")
+
+def page_tools() -> None:
+    st.markdown("#### Công cụ agent đang dùng")
+    st.caption("Đọc trực tiếp từ `starter_v0/artifacts/tools.yaml`.")
+    for decl in load_tool_declarations(TOOLS_PATH):
+        name = decl["name"]
+        params = decl.get("parameters", {}).get("properties", {})
+        required = set(decl.get("parameters", {}).get("required", []))
+        tag = " · 🆕 tool nhóm" if name == "source_audit" else ""
+        with st.expander(f"{TOOL_ICONS.get(name, '🔧')} `{name}`{tag}"):
+            st.write(decl.get("description", ""))
+            st.dataframe(
+                [{"tham số": p + (" *" if p in required else ""), "kiểu": spec.get("type", ""),
+                  "mô tả": spec.get("description", "") + (f" (enum: {', '.join(map(str, spec['enum']))})"
+                                                         if spec.get("enum") else "")}
+                 for p, spec in params.items()],
+                hide_index=True, width="stretch",
+            )
+
+
+nav = st.navigation(
+    [
+        st.Page(page_chat, title="Chat", icon=":material/forum:", url_path="chat", default=True),
+        st.Page(page_benchmark, title="Benchmark", icon=":material/monitoring:", url_path="benchmark"),
+        st.Page(page_tools, title="Công cụ", icon=":material/construction:", url_path="tools"),
+    ],
+    position="top",
+)
+nav.run()
