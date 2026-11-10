@@ -81,6 +81,6 @@ Nhận xét: Bộ eval kiểm tra được tool mới và việc xử lý ngữ 
 
 ## 5. Tự đánh giá
 
-<!-- Tự viết từ trải nghiệm thực tế theo RULES.md. -->
+Tôi đánh giá phần việc của mình đã đáp ứng các yêu cầu kỹ thuật chính của của task: bộ eval có đủ 10 case gồm 5 single-turn và 5 multi-turn, có case kiểm tra tool mới và có run group làm bằng chứng. Kết quả 10/10 PASS phản ánh việc chọn tool và các tham số được kiểm tra. Phần soạn case, tích hợp và kiểm tra có sử dụng Codex hỗ trợ như đã nêu ở mục 4.
 
-`<Tự viết>`
+Hạn chế là bộ case còn nhỏ và một số đầu vào cần đối chiếu thêm ngoài bộ chấm tự động. G08 vẫn gặp lỗi HTTP 403 nên chưa thể kết luận toàn bộ luồng lấy dữ liệu hoạt động thành công. Phần cần cải thiện tiếp là kiểm tra nguyên nhân lỗi API, mở rộng các tình huống biên và đánh giá cả dữ liệu tool trả về thay vì chỉ dựa vào điểm PASS.
