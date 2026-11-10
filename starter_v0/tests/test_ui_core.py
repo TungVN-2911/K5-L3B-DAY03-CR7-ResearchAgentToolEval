@@ -156,3 +156,27 @@ def test_latest_version_label_ignores_branch_rows(tmp_path: Path) -> None:
     log.write_text("version,author\nv0,a\nv3,a\nv3-source-audit,b\nv12,a\n", encoding="utf-8")
     assert ui_core.latest_version_label(log) == "v12"
     assert ui_core.latest_version_label(tmp_path / "missing.csv") == "ui"
+
+
+def test_version_snapshots_match_version_log() -> None:
+    versions = ui_core.list_versions()
+    names = [v.version for v in versions]
+    assert names[:7] == ["v0", "v1", "v2", "v3", "v4", "v5", "v6"]
+    # mỗi snapshot phải đúng byte với hash đã ghi khi chạy eval
+    assert all(v.hash_matches_log for v in versions if v.version in {"v0", "v1", "v2", "v3", "v4", "v5", "v6"})
+    assert versions[-1].base_accuracy == 1.0
+
+
+def test_prompt_diff_shows_changed_lines() -> None:
+    v0 = ui_core.VERSIONS_DIR / "v0" / "system_prompt.md"
+    v1 = ui_core.VERSIONS_DIR / "v1" / "system_prompt.md"
+    diff = ui_core.prompt_diff(v0, v1)
+    assert "-If a request mentions a tweet" in diff or "Sam Altman" in diff
+    assert "+Never guess information" in diff
+
+
+def test_find_empty_conversation_reuses_instead_of_creating() -> None:
+    convs = {"a": {"messages": [{"role": "user", "content": "hi"}]}, "b": {"messages": []}, "c": {"messages": []}}
+    assert ui_core.find_empty_conversation(convs, prefer="c") == "c"   # ưu tiên cuộc đang mở nếu trống
+    assert ui_core.find_empty_conversation(convs, prefer="a") == "b"   # cuộc đang mở có tin nhắn → lấy cuộc trống khác
+    assert ui_core.find_empty_conversation({"a": convs["a"]}, prefer="a") is None

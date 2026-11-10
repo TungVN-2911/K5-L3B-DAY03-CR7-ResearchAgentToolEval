@@ -62,25 +62,59 @@ st.markdown(
 )
 
 
-# --------------------------------------------------------------------------- state
+# --------------------------------------------------------------------------- versions & state
+
+VERSIONS = ui_core.list_versions()
+VERSION_MAP = {v.version: v for v in VERSIONS}
+VERSION_NAMES = [v.version for v in VERSIONS] or ["current"]
+LATEST = VERSION_NAMES[-1]
 
 
-def _new_conversation() -> str:
-    cid = uuid.uuid4().hex[:8]
-    st.session_state.conversations[cid] = {
-        "title": "Cuộc trò chuyện mới", "messages": [], "pending": None,
+def version_label(name: str) -> str:
+    v = VERSION_MAP.get(name)
+    if not v:
+        return name
+    score = "" if v.base_accuracy is None else f" · base {v.base_accuracy:.0%}"
+    return f"{name}{score}"
+
+
+def version_paths(name: str) -> tuple[Path, Path]:
+    v = VERSION_MAP.get(name)
+    return (v.prompt_path, v.tools_path) if v else (PROMPT_PATH, TOOLS_PATH)
+
+
+def make_conversation(version: str, title: str = "Cuộc trò chuyện mới") -> dict:
+    return {
+        "title": title, "messages": [], "pending": None, "version": version,
         "transcript_path": None, "transcript": None,
         "created": datetime.now().strftime("%H:%M · %d/%m/%Y"),
     }
+
+
+def _new_conversation(version: str | None = None) -> str:
+    """Mở cuộc trò chuyện mới; nếu đã có một cuộc còn trống thì dùng lại, không tạo thêm cuộc rỗng."""
+    version = version or st.session_state.get("chat_version", LATEST)
+    convs = st.session_state.conversations
+    cid = ui_core.find_empty_conversation(convs, prefer=st.session_state.get("active"))
+    if cid is None:
+        cid = uuid.uuid4().hex[:8]
+        convs[cid] = make_conversation(version)
+    else:
+        convs[cid].update(version=version, transcript=None, transcript_path=None, pending=None,
+                          created=datetime.now().strftime("%H:%M · %d/%m/%Y"))
+        convs[cid] = convs.pop(cid)  # đưa lên đầu danh sách (mới nhất)
     st.session_state.active = cid
     return cid
 
 
 if "conversations" not in st.session_state:
     st.session_state.conversations = {}
-    _new_conversation()
-if "queued" not in st.session_state:
-    st.session_state.queued = None
+    _new_conversation(LATEST)
+for key, default in {"queued": None, "compare_queued": None}.items():
+    st.session_state.setdefault(key, default)
+if "compare" not in st.session_state:
+    st.session_state.compare = {"A": make_conversation(VERSION_NAMES[0], "So sánh A"),
+                                "B": make_conversation(LATEST, "So sánh B")}
 
 
 def active_conv() -> dict:
@@ -92,13 +126,18 @@ def active_conv() -> dict:
 
 with st.sidebar:
     st.markdown("## 🔬 CR7 Research Agent")
-    if st.button("➕ Cuộc trò chuyện mới", width="stretch", type="primary"):
-        _new_conversation()
+    _is_empty = not active_conv()["messages"]
+    if st.button("➕ Cuộc trò chuyện mới", width="stretch", type="primary", disabled=_is_empty,
+                 help="Bạn đang ở một cuộc trò chuyện trống" if _is_empty else None):
+        _new_conversation(LATEST)
         st.rerun()
 
     st.caption("Lịch sử")
-    for cid, conv in reversed(list(st.session_state.conversations.items())):
-        label = ("▸ " if cid == st.session_state.active else "") + conv["title"]
+    _history = [(cid, item) for cid, item in st.session_state.conversations.items() if item["messages"]]
+    if not _history:
+        st.caption("Chưa có cuộc trò chuyện nào.")
+    for cid, item in reversed(_history):
+        label = ("▸ " if cid == st.session_state.active else "") + f"[{item['version']}] {item['title']}"
         if st.button(label, key=f"conv_{cid}", width="stretch"):
             st.session_state.active = cid
             st.rerun()
@@ -109,38 +148,35 @@ with st.sidebar:
         provider = make_provider(provider_name)
         default_model = getattr(provider, "default_model", "") or ""
         model = st.text_input("Model", placeholder=default_model, help="Để trống để dùng model mặc định.").strip() or None
-        version_label = st.text_input("Nhãn version", value=ui_core.latest_version_label(),
-                                      help="Ghi vào transcript để đối chiếu với version_log.csv.")
         history_window = st.slider("Số cặp hội thoại nhớ", 1, 10, 5)
         max_rounds = st.slider("Số vòng gọi tool tối đa", 1, 6, 4)
 
     key_env = PROVIDER_KEYS.get(provider_name)
     key_ok = key_env is None or bool(os.getenv(key_env))
     tg_ok = bool(os.getenv("TELEGRAM_BOT_TOKEN") and os.getenv("TELEGRAM_CHAT_ID"))
-    artifact = ui_core.build_artifact_version(version_label or "ui", PROMPT_PATH, TOOLS_PATH)
     st.markdown(
         f"{'🟢' if key_ok else '🔴'} API key {provider_name}  \n"
         f"{'🟢' if tg_ok else '⚪'} Telegram {'đã cấu hình' if tg_ok else 'chưa cấu hình'}  \n"
-        f"<span class='pill'>{model or default_model}</span><span class='pill'>{artifact.artifact_version}</span>",
+        f"<span class='pill'>{model or default_model}</span>",
         unsafe_allow_html=True,
     )
-    conv = active_conv()
-    if conv["transcript_path"] and Path(conv["transcript_path"]).exists():
-        st.download_button("⬇️ Tải transcript JSON", Path(conv["transcript_path"]).read_bytes(),
-                           file_name=Path(conv["transcript_path"]).name, mime="application/json",
+    _conv = active_conv()
+    if _conv["transcript_path"] and Path(_conv["transcript_path"]).exists():
+        st.download_button("⬇️ Tải transcript JSON", Path(_conv["transcript_path"]).read_bytes(),
+                           file_name=Path(_conv["transcript_path"]).name, mime="application/json",
                            width="stretch")
-        st.caption(f"Đã lưu: `starter_v0/transcripts/{Path(conv['transcript_path']).name}`")
+        st.caption(f"Đã lưu: `starter_v0/transcripts/{Path(_conv['transcript_path']).name}`")
 
 
 # --------------------------------------------------------------------------- chat helpers
 
 
-def render_tool_events(events: list[dict]) -> None:
+def render_tool_events(events: list[dict], key: str = "") -> None:
     if not events:
         return
     errors = [e for e in events if ui_core.tool_error(e)]
     names = ", ".join(dict.fromkeys(e.get("tool", "?") for e in events))
-    label = f"🔧 Đã dùng {len(events)} công cụ: {names}" + (f" · ⚠️ {len(errors)} lỗi" if errors else "")
+    label = f"🔧 {len(events)} công cụ: {names}" + (f" · ⚠️ {len(errors)} lỗi" if errors else "")
     with st.expander(label, expanded=bool(errors)):
         for event in events:
             name = event.get("tool", "?")
@@ -166,9 +202,11 @@ def render_message(msg: dict) -> None:
             st.warning(msg["content"])
             st.caption(msg.get("error", ""))
         elif msg.get("status") == "waiting_for_user":
-            st.info(f"**Cần bạn bổ sung:** {msg['content']}")
+            st.info(f"**Agent hỏi lại:** {msg['content']}")
         else:
             st.markdown(msg["content"])
+        if msg["role"] == "assistant" and not msg.get("tool_events") and msg.get("status") == "answered":
+            st.caption("Không gọi công cụ")
         render_tool_events(msg.get("tool_events") or [])
 
 
@@ -177,23 +215,19 @@ def history_for_model(messages: list[dict]) -> list[dict[str, str]]:
             if m["role"] in {"user", "assistant"} and m.get("status") != "provider_error"]
 
 
-def handle_user_message(text: str, *, regenerate: bool = False) -> None:
-    conv = active_conv()
-    if not regenerate:
-        conv["messages"].append({"role": "user", "content": text})
-        if conv["title"] == "Cuộc trò chuyện mới":
-            conv["title"] = ui_core.conversation_title(text)
-        render_message(conv["messages"][-1])
-    conv["pending"] = None
-
+def agent_reply(conv: dict) -> None:
+    """Chạy agent (đúng version của cuộc trò chuyện) cho tin nhắn user cuối, hiện tiến trình, lưu transcript."""
+    prompt_path, tools_path = version_paths(conv["version"])
     if conv["transcript"] is None:
         path, transcript = ui_core.new_transcript(
-            version=version_label or "ui", provider_name=provider_name, model=model or default_model,
-            history_window=history_window, max_tool_rounds=max_rounds)
+            version=conv["version"], provider_name=provider_name, model=model or default_model,
+            history_window=history_window, max_tool_rounds=max_rounds,
+            system_prompt_path=prompt_path, tools_path=tools_path)
         conv["transcript_path"], conv["transcript"] = str(path), transcript
+    conv["pending"] = None
 
     with st.chat_message("assistant", avatar="🔬"):
-        status = st.status("Đang suy nghĩ…", expanded=False)
+        status = st.status(f"{conv['version']} đang suy nghĩ…", expanded=False)
 
         def on_event(kind: str, data: dict) -> None:
             if kind == "tool_call":
@@ -207,8 +241,8 @@ def handle_user_message(text: str, *, regenerate: bool = False) -> None:
         started = now_iso()
         result = ui_core.run_turn(
             provider=provider,
-            system_prompt=PROMPT_PATH.read_text(encoding="utf-8"),
-            tools=to_openai_tools(load_tool_declarations(TOOLS_PATH)),
+            system_prompt=prompt_path.read_text(encoding="utf-8"),
+            tools=to_openai_tools(load_tool_declarations(tools_path)),
             history=history_for_model(conv["messages"][:-1]),
             user_text=conv["messages"][-1]["content"],
             model=model,
@@ -216,8 +250,8 @@ def handle_user_message(text: str, *, regenerate: bool = False) -> None:
             max_tool_rounds=max_rounds,
             on_event=on_event,
         )
-        status.update(label="Xong" if result.status != "provider_error" else "Lỗi provider",
-                      state="complete" if result.status != "provider_error" else "error")
+        failed = result.status == "provider_error"
+        status.update(label="Lỗi provider" if failed else "Xong", state="error" if failed else "complete")
 
     ui_core.record_turn(Path(conv["transcript_path"]), conv["transcript"], conv["messages"][-1]["content"],
                         result, started)
@@ -226,33 +260,78 @@ def handle_user_message(text: str, *, regenerate: bool = False) -> None:
         "tool_events": result.tool_events, "error": result.error,
     })
     conv["pending"] = result.pending
+
+
+def add_user_message(conv: dict, text: str) -> None:
+    conv["messages"].append({"role": "user", "content": text})
+    if conv["title"] in {"Cuộc trò chuyện mới"}:
+        conv["title"] = ui_core.conversation_title(text)
+
+
+def handle_user_message(text: str, *, regenerate: bool = False) -> None:
+    conv = active_conv()
+    if not regenerate:
+        add_user_message(conv, text)
+        render_message(conv["messages"][-1])
+    agent_reply(conv)
     st.rerun()
+
+
+def sample_cards(state_key: str, prefix: str) -> None:
+    cols = st.columns(3, gap="medium")
+    for i, (icon, title, prompt_text) in enumerate(SAMPLES):
+        with cols[i % 3].container(border=True):
+            st.markdown(f"<div class='card-title'>{icon} {title}</div>"
+                        f"<div class='card-text'>{prompt_text}</div>", unsafe_allow_html=True)
+            if st.button("Hỏi thử →", key=f"{prefix}_{i}", help=prompt_text, width="stretch"):
+                st.session_state[state_key] = prompt_text
+                st.rerun()
+
+
+def version_badge(name: str) -> str:
+    v = VERSION_MAP.get(name)
+    if not v:
+        return f"`{name}`"
+    check = "✅ hash khớp version_log" if v.hash_matches_log else "⚠️ hash không khớp version_log"
+    return f"`{v.artifact_version}` · {check}"
 
 
 # --------------------------------------------------------------------------- pages
 # Mỗi trang là một hàm; st.navigation(position="top") đặt thanh điều hướng cố định trên header
-# (không cuộn theo nội dung), mỗi trang có URL riêng: /chat, /benchmark, /tools.
+# (không cuộn theo nội dung), mỗi trang có URL riêng: /, /compare, /benchmark, /tools.
+
+
+def _on_chat_version_change() -> None:
+    conv = active_conv()
+    chosen = st.session_state.chat_version
+    if conv["messages"]:
+        _new_conversation(chosen)  # giữ nguyên cuộc cũ, mở cuộc mới với version vừa chọn
+    else:
+        conv["version"] = chosen
+        conv["transcript"] = conv["transcript_path"] = None
 
 
 def page_chat() -> None:
     conv = active_conv()
-    if conv["messages"]:
-        asked = sum(1 for m in conv["messages"] if m["role"] == "user")
-        st.markdown(f"### {conv['title']}")
-        st.caption(f"{conv.get('created', '')} · {asked} câu hỏi · {artifact.artifact_version}")
-    else:
-        st.markdown("## Xin chào 👋 Mình có thể giúp bạn nghiên cứu gì hôm nay?")
+    st.session_state.chat_version = conv["version"]
+    head, pick = st.columns([3, 1], vertical_alignment="bottom")
+    with pick:
+        st.selectbox("Phiên bản agent", VERSION_NAMES, key="chat_version", format_func=version_label,
+                     on_change=_on_chat_version_change,
+                     help="Đổi version khi đang chat sẽ mở cuộc trò chuyện mới với version đó.")
+    with head:
+        if conv["messages"]:
+            asked = sum(1 for m in conv["messages"] if m["role"] == "user")
+            st.markdown(f"### {conv['title']}")
+            st.caption(f"{conv.get('created', '')} · {asked} câu hỏi · {version_badge(conv['version'])}")
+        else:
+            st.markdown("## Xin chào 👋 Mình có thể giúp bạn nghiên cứu gì hôm nay?")
+    if not conv["messages"]:
         st.markdown("<div class='sample-hint'>Tìm tin web, đọc tweet theo tài khoản hoặc chủ đề, đọc URL, "
-                    "kiểm tra link trùng và đăng Telegram (luôn hỏi xác nhận trước). Chọn một gợi ý để thử:</div>",
+                    "kiểm tra link trùng và đăng Telegram (luôn hỏi xác nhận trước). Chọn một gợi ý để thử, "
+                    "hoặc mở trang <b>So sánh</b> để xem các version trả lời khác nhau thế nào:</div>",
                     unsafe_allow_html=True)
-        cols = st.columns(3, gap="medium")
-        for i, (icon, title, prompt_text) in enumerate(SAMPLES):
-            with cols[i % 3].container(border=True):
-                st.markdown(f"<div class='card-title'>{icon} {title}</div>"
-                            f"<div class='card-text'>{prompt_text}</div>", unsafe_allow_html=True)
-                if st.button("Hỏi thử →", key=f"sample_{i}", help=prompt_text, width="stretch"):
-                    st.session_state.queued = prompt_text
-                    st.rerun()
+        sample_cards("queued", "sample")
 
     for msg in conv["messages"]:
         render_message(msg)
@@ -273,7 +352,7 @@ def page_chat() -> None:
             with st.popover("📋 Sao chép", type="tertiary"):
                 st.code(last["content"], language=None, wrap_lines=True)
 
-    placeholder = "Trả lời câu hỏi của agent…" if conv["pending"] else "Hỏi agent về tin tức, tweet, URL…"
+    placeholder = "Trả lời câu hỏi của agent…" if conv["pending"] else f"Hỏi agent {conv['version']} về tin tức, tweet, URL…"
     typed = st.chat_input(placeholder)
     queued, st.session_state.queued = st.session_state.queued, None
     if typed:
@@ -282,6 +361,81 @@ def page_chat() -> None:
         handle_user_message(queued[1], regenerate=True)
     elif queued:
         handle_user_message(queued)
+
+
+def _reset_compare_side(side: str) -> None:
+    st.session_state.compare[side] = make_conversation(st.session_state[f"cmp_{side}"], f"So sánh {side}")
+
+
+def page_compare() -> None:
+    cmp = st.session_state.compare
+    st.markdown("### So sánh hai version")
+    st.caption("Gửi cùng một câu hỏi cho hai version để thấy khác biệt về cách chọn tool, tham số, hỏi lại và xác nhận. "
+               "Mỗi bên có lịch sử riêng; nút trả lời nhanh ở mỗi cột chỉ gửi cho bên đó.")
+
+    for side in ("A", "B"):
+        st.session_state.setdefault(f"cmp_{side}", cmp[side]["version"])
+    with st.container(horizontal=True, gap="small", vertical_alignment="bottom"):
+        st.selectbox("Version A", VERSION_NAMES, key="cmp_A", format_func=version_label,
+                     on_change=_reset_compare_side, args=("A",))
+        st.selectbox("Version B", VERSION_NAMES, key="cmp_B", format_func=version_label,
+                     on_change=_reset_compare_side, args=("B",))
+        if st.button("🧹 Làm mới", help="Xóa hội thoại so sánh của cả hai bên"):
+            _reset_compare_side("A")
+            _reset_compare_side("B")
+            st.rerun()
+
+    va, vb = VERSION_MAP.get(cmp["A"]["version"]), VERSION_MAP.get(cmp["B"]["version"])
+    if va and vb:
+        with st.expander(f"📝 Prompt {va.version} → {vb.version} khác nhau chỗ nào?"):
+            diff = ui_core.prompt_diff(va.prompt_path, vb.prompt_path)
+            st.code(diff or "Hai prompt giống hệt nhau.", language="diff", wrap_lines=True)
+            if va.tools_path.read_bytes() != vb.tools_path.read_bytes():
+                st.caption(f"`tools.yaml` cũng khác nhau ({va.artifact_version} → {vb.artifact_version}).")
+            else:
+                st.caption("`tools.yaml` giống nhau.")
+
+    if not cmp["A"]["messages"] and not cmp["B"]["messages"]:
+        st.markdown("<div class='sample-hint'>Gợi ý để thấy khác biệt rõ: <b>Thiếu thông tin</b>, "
+                    "<b>Đăng Telegram</b> (so v0 với v6), hoặc một câu ngoài phạm vi như "
+                    "<i>“Viết giúp mình hàm Python tính Fibonacci”</i>.</div>", unsafe_allow_html=True)
+        sample_cards("compare_queued", "cmp_sample")
+
+    cols = st.columns(2, gap="large")
+    for col, side in zip(cols, ("A", "B")):
+        conv = cmp[side]
+        with col:
+            v = VERSION_MAP.get(conv["version"])
+            st.markdown(f"#### {side} · {conv['version']}")
+            if v:
+                st.caption(f"**{v.changed_artifact or '—'}** · {v.hypothesis or ''}")
+            for msg in conv["messages"]:
+                render_message(msg)
+            replies = ui_core.quick_replies(conv["pending"])
+            if replies:
+                with st.container(horizontal=True, gap="small"):
+                    for i, reply in enumerate(replies):
+                        if st.button(reply, key=f"cmp_qr_{side}_{i}", type="primary" if i == 0 else "secondary"):
+                            st.session_state.compare_queued = ((side,), reply)
+                            st.rerun()
+
+    typed = st.chat_input("Gửi cùng câu hỏi cho cả hai version…")
+    queued, st.session_state.compare_queued = st.session_state.compare_queued, None
+    if typed:
+        queued = (("A", "B"), typed)
+    elif isinstance(queued, str):
+        queued = (("A", "B"), queued)
+    if queued:
+        sides, text = queued
+        for side in sides:
+            add_user_message(cmp[side], text)
+        live = st.columns(2, gap="large")
+        for side in sides:
+            with live[0 if side == "A" else 1]:
+                render_message(cmp[side]["messages"][-1])
+                agent_reply(cmp[side])
+        st.rerun()
+
 
 def page_benchmark() -> None:
     import altair as alt
@@ -401,6 +555,7 @@ def page_tools() -> None:
 nav = st.navigation(
     [
         st.Page(page_chat, title="Chat", icon=":material/forum:", url_path="chat", default=True),
+        st.Page(page_compare, title="So sánh version", icon=":material/compare_arrows:", url_path="compare"),
         st.Page(page_benchmark, title="Benchmark", icon=":material/monitoring:", url_path="benchmark"),
         st.Page(page_tools, title="Công cụ", icon=":material/construction:", url_path="tools"),
     ],
