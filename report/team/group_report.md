@@ -37,7 +37,9 @@ API key đọc từ `starter_v0/.env` (OpenRouter + Tavily + Firecrawl + RapidAP
 
 **Link dùng thử (deploy):**
 
-> URL: `<chưa có — chạy UI rồi mở tunnel: cloudflared tunnel --url http://localhost:8501, dán link https://…trycloudflare.com vào đây>`
+> URL: https://qty-sealed-metallica-constructed.trycloudflare.com
+>
+> Link Quick Tunnel tạm thời; chỉ hoạt động khi Streamlit và `cloudflared` còn chạy.
 
 ### A2. Tool agent có
 
@@ -118,6 +120,8 @@ Lấy từ `results[*].result.failures` trong run JSON.
 | G09_multi_cancel_send | Người dùng hủy gửi thì dừng, không send, không hỏi lại | không gọi tool | PASS |
 | G10_multi_audit_empty_items | Danh sách rỗng được cung cấp rõ khác với chưa có items | `source_audit(items=[])` | PASS |
 
+G08 PASS ở run v6 xác nhận routing và args; run đó không chứng minh lấy được tweet. Trong lần chạy group, API RapidAPI trả HTTP 403. Sau khi xử lý subscription, lần thử lại trên UI đã lấy được kết quả `social_search`; xem transcript bổ sung [`ui_v6_openrouter_20261110T222110199947.transcript.json`](../../starter_v0/transcripts/ui_v6_openrouter_20261110T222110199947.transcript.json), lượt 2. Vì vậy, 403 là lỗi đã xảy ra lúc chạy eval, không phải trạng thái hiện tại của API.
+
 ### B4. Live Chat Evidence
 
 Lấy từ [`starter_v0/transcripts/ui_v6_openrouter_20261110T192858267079.transcript.json`](../../starter_v0/transcripts/ui_v6_openrouter_20261110T192858267079.transcript.json) — chat live qua UI, cấu hình `v6+p5a4f316905ed+tf0632d419cd7`, `openai/gpt-4o-mini`.
@@ -129,14 +133,12 @@ Lấy từ [`starter_v0/transcripts/ui_v6_openrouter_20261110T192858267079.trans
 | 3 | "Đăng bản tin 'AI hôm nay: OpenAI ra mắt model mới' lên Telegram giúp mình" | `clarify(response_type='yes_no')` | v6 | Agent xin xác nhận trước, không tự gửi; UI hiện nút Có / Không |
 | 4 | "Có, xác nhận" (bấm nút) | `send(text=..., confirmed=true)` | v6 | Tool trả `RuntimeError: Missing TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID` — nhóm chưa cấu hình bot nên không gửi thật; UI hiện rõ lỗi tool |
 
-Transcript `chat.py` (CLI): `<bổ sung sau khi chạy python chat.py --provider openrouter --version v6>`
-
 ### B5a. Required Evidence — Tool mới, unit test, UI
 
 | Item | Evidence File | What Worked | Risk / Guardrail |
 |---|---|---|---|
 | Tool mới (`tools/source_audit/`) | `starter_v0/tools/source_audit/tool.py`, `TOOL.md`, đăng ký trong `tools/__init__.py` và `artifacts/tools.yaml` | Phát hiện URL trùng sau chuẩn hóa (host không phân biệt hoa thường, bỏ `www.`, `/` cuối, fragment), đếm theo nguồn, suy nguồn từ domain; agent route đúng ở G01/G06/G10 | Không gọi mạng; input sai kiểu trả error dict thay vì raise; không đánh giá độ tin cậy nguồn |
-| Unit test tool mới (≥ 3 test/tool) | `starter_v0/tests/test_tools_todo.py` (3 test `test_source_audit_*`); `pytest`: **83 passed, 14 skipped, 0 failed** | Happy path, input xấu từ model, nhánh lỗi bất ngờ trả error dict | 14 test skip là stub challenge của tool có sẵn (được phép) |
+| Unit test tool mới (≥ 3 test/tool) | `starter_v0/tests/test_tools_todo.py` (3 test `test_source_audit_*`); lần chạy hiện tại `pytest`: **86 passed, 14 skipped, 0 failed** | Happy path, input xấu từ model, nhánh lỗi bất ngờ trả error dict | 14 test skip là stub challenge của tool có sẵn (được phép) |
 | UI (lệnh chạy + link dùng thử) | `app.py`, `starter_v0/ui_core.py`, `starter_v0/tests/test_ui_core.py` (12 test), `requirements.txt` | Chat nhiều vòng tool, trả lời nhanh xác nhận, lưu transcript, tab benchmark v0–v6; kiểm tra bằng `streamlit.testing` AppTest không exception | Lỗi tool/provider hiện rõ; `send` vẫn bị chặn ở tool nếu `confirmed=false`; link deploy còn thiếu |
 
 Tool unit tests: 3 test cho `source_audit` + 3 test contract/eval nhóm (`test_group_eval.py`) + 12 test logic UI. Ví dụ lỗi unit test bắt được mà eval không bắt: eval chỉ kiểm tra model gọi `source_audit` với đúng items; nếu tool chuẩn hóa URL sai (coi `https://www.a.com/x/` khác `https://a.com/x`) thì eval vẫn PASS nhưng người dùng nhận kết quả sai — `test_source_audit_detects_duplicate_urls_and_counts_sources` bắt được lỗi này.
@@ -158,6 +160,7 @@ Nhóm chưa làm bonus. `send` mới chạy tới bước gọi tool với `conf
 - **Lộ key suýt commit:** API key từng được dán vào `.env.example` (file bị git theo dõi); đã chuyển sang `.env` (gitignored) và khôi phục `.env.example` trước khi commit.
 - **Run group lệch cấu hình:** run group gốc ghi prompt hash `8e5e191e9a0b` không khớp prompt trong repo; nhóm chạy lại group với v4/v5/v6 đã commit để bằng chứng khớp hash.
 - **Sửa một chỗ làm hỏng chỗ khác:** v5 (thêm rule đa tool) làm giảm base 1.0→0.95, group 1.0→0.9; phát hiện nhờ chạy cả hai suite, sửa ở v6.
+- **RapidAPI Twitter API45 ban đầu trả 403:** phản hồi cho biết tài khoản chưa subscribe API. Sau khi xử lý subscription, nhóm thử lại trên UI và `social_search` đã trả kết quả (transcript bổ sung ở B3). Run group v6 được giữ nguyên và ghi rõ G08 chỉ chứng minh routing/args trong lần chạy đó, không chứng minh lấy dữ liệu thành công.
 - **Chưa có bot Telegram:** bước `send(confirmed=true)` trả lỗi thiếu token; UI hiển thị lỗi thay vì báo đã gửi.
 
 ## 6. Tổng hợp đóng góp

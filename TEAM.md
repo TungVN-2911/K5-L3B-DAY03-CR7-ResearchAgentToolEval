@@ -12,7 +12,7 @@
 | STT | Họ tên | MSSV | Email | GitHub | Vai trò |
 | --: | ------ | ---- | ----- | ------ | ------- |
 |   1 | Đỗ Hồng Vỹ | 2A202604107 | 26ai.vydh@vinuni.edu.vn | `<điền>` | Người 1 — Setup, baseline, versioning v0–v6 |
-|   2 | Vũ Ngọc Tùng | 2A202604106 | `<tự điền>` | ToiLaTung | Người 2 — Tool mới `source_audit` + unit test |
+|   2 | Vũ Ngọc Tùng | 2A202604106 | vungoctung098@gmail.com | ToiLaTung | Người 2 — Tool mới `source_audit` + unit test |
 |   3 | Nguyễn Trọng Khiêm | 2A202604109 | `<tự điền>` | KhiemNTK | Người 3 — Eval nhóm (10 case) |
 |   4 | `<tự điền>` | `<tự điền>` | `<tự điền>` | viethoang127 | Người 4 — UI, live chat, báo cáo nhóm |
 

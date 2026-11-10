@@ -1,0 +1,132 @@
+{
+  "transcript_id": "ui_v6_openrouter_20261110T195537722343",
+  "source": "streamlit_ui",
+  "version": "v6",
+  "artifact_version": "v6+p5a4f316905ed+tf0632d419cd7",
+  "prompt_hash": "5a4f316905ed25672f3d3047e4a3dd13a883ccbb85e379bb05e56198eaae15ab",
+  "tools_hash": "f0632d419cd7ddd37ccdfb523d619bc1c77d2858fe9cc475f040a49d84d5ec95",
+  "provider": "openrouter",
+  "model": "openai/gpt-4o-mini",
+  "system_prompt": "C:\\Users\\pc\\source\\repos\\K5-L3B-DAY03-CR7-ResearchAgentToolEval\\starter_v0\\artifacts\\versions\\v6\\system_prompt.md",
+  "tools": "C:\\Users\\pc\\source\\repos\\K5-L3B-DAY03-CR7-ResearchAgentToolEval\\starter_v0\\artifacts\\versions\\v6\\tools.yaml",
+  "history_window": 5,
+  "max_tool_rounds": 4,
+  "created_at": "2026-11-10T19:55:37",
+  "updated_at": "2026-11-10T19:56:09",
+  "turns": [
+    {
+      "turn_index": 1,
+      "started_at": "2026-11-10T19:55:37",
+      "user": "“Tìm bài đăng mới nhất trên X/Twitter nhắc đến Gemini 3.”",
+      "status": "answered",
+      "assistant_text": "Hiện tại, tôi không thể truy cập vào dữ liệu từ Twitter để tìm bài đăng mới nhất về \"Gemini 3\". Nếu bạn có yêu cầu khác hoặc muốn tìm kiếm thông tin từ nguồn khác, hãy cho tôi biết!",
+      "rounds": [
+        {
+          "round": 1,
+          "assistant_text": null,
+          "tool_calls": [
+            {
+              "name": "social_search",
+              "args": {
+                "query": "Gemini 3",
+                "search_type": "Latest"
+              }
+            }
+          ],
+          "tool_results": [
+            {
+              "tool": "social_search",
+              "args": {
+                "query": "Gemini 3",
+                "search_type": "Latest"
+              },
+              "result": {
+                "tool": "search_tweets",
+                "error": "HTTPError",
+                "message": "403 Client Error: Forbidden for url: https://twitter-api45.p.rapidapi.com/search.php?query=Gemini+3&search_type=Latest"
+              }
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "assistant_text": "Hiện tại, tôi không thể truy cập vào dữ liệu từ Twitter để tìm bài đăng mới nhất về \"Gemini 3\". Nếu bạn có yêu cầu khác hoặc muốn tìm kiếm thông tin từ nguồn khác, hãy cho tôi biết!",
+          "tool_calls": [],
+          "tool_results": []
+        }
+      ],
+      "tool_events": [
+        {
+          "tool": "social_search",
+          "args": {
+            "query": "Gemini 3",
+            "search_type": "Latest"
+          },
+          "result": {
+            "tool": "search_tweets",
+            "error": "HTTPError",
+            "message": "403 Client Error: Forbidden for url: https://twitter-api45.p.rapidapi.com/search.php?query=Gemini+3&search_type=Latest"
+          }
+        }
+      ],
+      "ended_at": "2026-11-10T19:55:43"
+    },
+    {
+      "turn_index": 2,
+      "started_at": "2026-11-10T19:56:04",
+      "user": "“Tìm bài đăng mới nhất trên X/Twitter nhắc đến AI”",
+      "status": "answered",
+      "assistant_text": "Hiện tại, tôi không thể truy cập vào dữ liệu từ Twitter để tìm bài đăng mới nhất về \"AI\". Nếu bạn có yêu cầu khác hoặc muốn tìm kiếm thông tin từ nguồn khác, hãy cho tôi biết!",
+      "rounds": [
+        {
+          "round": 1,
+          "assistant_text": null,
+          "tool_calls": [
+            {
+              "name": "social_search",
+              "args": {
+                "query": "AI",
+                "search_type": "Latest"
+              }
+            }
+          ],
+          "tool_results": [
+            {
+              "tool": "social_search",
+              "args": {
+                "query": "AI",
+                "search_type": "Latest"
+              },
+              "result": {
+                "tool": "search_tweets",
+                "error": "HTTPError",
+                "message": "403 Client Error: Forbidden for url: https://twitter-api45.p.rapidapi.com/search.php?query=AI&search_type=Latest"
+              }
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "assistant_text": "Hiện tại, tôi không thể truy cập vào dữ liệu từ Twitter để tìm bài đăng mới nhất về \"AI\". Nếu bạn có yêu cầu khác hoặc muốn tìm kiếm thông tin từ nguồn khác, hãy cho tôi biết!",
+          "tool_calls": [],
+          "tool_results": []
+        }
+      ],
+      "tool_events": [
+        {
+          "tool": "social_search",
+          "args": {
+            "query": "AI",
+            "search_type": "Latest"
+          },
+          "result": {
+            "tool": "search_tweets",
+            "error": "HTTPError",
+            "message": "403 Client Error: Forbidden for url: https://twitter-api45.p.rapidapi.com/search.php?query=AI&search_type=Latest"
+          }
+        }
+      ],
+      "ended_at": "2026-11-10T19:56:09"
+    }
+  ]
+}
