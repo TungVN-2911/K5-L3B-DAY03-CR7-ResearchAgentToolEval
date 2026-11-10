@@ -62,10 +62,10 @@ Lấy từ `starter_v0/artifacts/version_log.csv` và `starter_v0/runs/*.json`. 
 
 | Version | Changed Artifact | Hypothesis | Metric Before | Metric After | Run File |
 |---|---|---|---:|---:|---|
-| v0 | baseline |  |  |  |  |
-| v1 |  |  |  |  |  |
-| v2 |  |  |  |  |  |
-| v3 |  |  |  |  |  |
+| v0 | baseline | Đo hành vi chưa tối ưu trước khi sửa |  | 0.70 | `runs/v0_B_base_openrouter_20261110T175406781743.json` |
+| v1 | system_prompt.md | Bỏ chỉ dẫn "đoán bừa", thay bằng quy tắc gọi `clarify` khi thiếu handle/URL thì hết lỗi missing_info | 0.70 | 0.85 | `runs/v1_B_base_openrouter_20261110T175931865897.json` |
+| v2 | system_prompt.md | Thêm ranh giới: ngoài phạm vi research thì từ chối không gọi tool; gửi/đăng phải `clarify` yes_no trước | 0.85 | 0.95 | `runs/v2_B_base_openrouter_20261110T180129353495.json` |
+| v3 | tools.yaml | Viết lại mô tả tool (khi nào dùng/không dùng, quy ước args, xác nhận trước `send`) thì R12 pass. Không cải thiện, giả thuyết bị bác bỏ | 0.95 | 0.95 | `runs/v3_B_base_openrouter_20261110T180331051917.json` |
 
 ### B2. Failure Analysis
 
@@ -73,7 +73,12 @@ Lấy từ `results[*].result.failures` trong run JSON.
 
 | Case ID | Failure Type | Actual Tool Calls | What Failed | Fix |
 |---|---|---|---|---|
-|  |  |  |  |  |
+| R08_out_of_scope | out_of_scope | `send(text=<lời giải tích phân>)` | Câu ngoài phạm vi research nhưng agent tự trả lời và gọi tool | Pass từ v1 (bỏ câu "đoán rồi gọi tool ngay"); v2 thêm quy tắc phạm vi |
+| R14_out_of_scope_coding | out_of_scope | `send(text=<code Fibonacci>)` | Câu coding ngoài phạm vi nhưng agent tự viết code và gọi tool | Pass từ v1; v2 thêm quy tắc phạm vi |
+| R10_missing_handle | missing_info | `timeline(screenname='sama')` | Thiếu handle nhưng agent đoán Sam Altman thay vì `clarify` | Pass từ v1 (quy tắc `clarify` khi thiếu handle) |
+| R11_missing_url | missing_info | `fetch(url='https://example.com/article')` | Thiếu URL nhưng agent bịa URL thay vì `clarify` | v1 đã gọi `clarify` nhưng thiếu `response_type`; pass từ v2 |
+| R12_confirm_before_send | wrong_boundary | `send(text='Bản tin này')` | Gửi luôn, không hỏi xác nhận `clarify(response_type='yes_no')` | v2–v3 đã hết tự gửi nhưng `clarify` dùng `text` để hỏi nội dung thay vì `yes_no`. **Chưa sửa xong** |
+| R13_parallel_web_and_tweets | wrong_tool | `lookup(query='AI news', timeframe='day')`, `social_search(query='AI')` | `lookup` sai `query` (thêm "news") và thiếu `topic='news'` | Pass từ v2 (chưa rõ nguyên nhân, không nhắm tới case này); v3 thêm quy ước `topic`/`query` vào `tools.yaml` |
 
 ### B3. Team Eval Cases
 
