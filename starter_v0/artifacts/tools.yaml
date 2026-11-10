@@ -139,3 +139,26 @@ tools:
         max_pages: {type: integer, default: 5, description: "Số trang tối đa cần đọc."}
         max_chars: {type: integer, default: 8000, description: "Số ký tự tối đa trả về."}
       required: [arxiv_url]
+
+  # ---------------- Team tool ----------------
+  - name: source_audit
+    description: >-
+      Kiểm tra danh sách research items ĐÃ có: tìm URL trùng và đếm item theo nguồn.
+      Dùng khi người dùng muốn kiểm tra link trùng hoặc độ phủ nguồn trong dữ liệu đã cung cấp/thu thập.
+      Không tìm dữ liệu mới, không xác minh tính đúng sai hoặc độ đáng tin của nguồn.
+      Chỉ dùng danh sách hiện tại mà người dùng muốn kiểm tra, không gộp dữ liệu đã bị thay thế.
+      Nếu chưa có items thì gọi clarify để xin danh sách; items rỗng [] vẫn là đầu vào hợp lệ.
+    parameters:
+      type: object
+      properties:
+        items:
+          type: array
+          description: "Danh sách item hiện tại; giữ nguyên các URL, kể cả URL trùng để tool phát hiện."
+          items:
+            type: object
+            properties:
+              title: {type: string}
+              url: {type: string, description: "URL HTTP/HTTPS đã có; không tự tạo hoặc sửa URL."}
+              source: {type: string, description: "Nguồn nếu đã biết; nếu thiếu, tool suy ra từ domain."}
+              summary: {type: string}
+      required: [items]

@@ -1,7 +1,130 @@
 {
   "dataset_id": "day03_v2_research_group",
   "dataset_role": "group",
-  "description": "Case do NHÓM tự viết thêm để cover thêm trường hợp. Mỗi case cần: id, phase='B', query HOẶC turns, failure_type (thuộc allowed_failure_types), và expect (tool_calls[...] hoặc no_tool=true). Nên kèm metadata.what_it_tests.",
+  "description": "CR7 — 10 case do Nguyễn Trọng Khiêm (Người 3) soạn với hỗ trợ Codex: 5 single-turn và 5 multi-turn. Đo routing, bộ lọc tìm kiếm, thiếu dữ liệu, xác nhận/hủy gửi và tool mới source_audit. Case có items dạng object được kiểm tra thêm thủ công trong run vì scorer hiện chưa so sánh được danh sách nhiều object.",
   "allowed_failure_types": ["wrong_tool", "wrong_arg_value", "wrong_boundary", "unnecessary_tool", "out_of_scope", "missing_info"],
-  "cases": []
+  "cases": [
+    {
+      "id": "G01_single_source_audit_duplicates",
+      "phase": "B",
+      "suite": "group",
+      "query": "Kiểm tra URL trùng và đếm số item theo nguồn trong danh sách đã thu thập sau, giữ nguyên cả link trùng và không tìm thêm dữ liệu: [{\"url\":\"https://www.example.org/agents/#overview\",\"source\":\"Example\"},{\"url\":\"https://example.org/agents\",\"source\":\"Example\"},{\"url\":\"https://research.example.net/report\"}].",
+      "failure_type": "wrong_tool",
+      "expect": {"tool_calls": [{"name": "source_audit", "args": {}}]},
+      "metadata": {
+        "what_it_tests": "Route tới tool mới khi đã có research items; không tìm kiếm hoặc format thay cho audit.",
+        "manual_review": "Đối chiếu đủ 3 URL nguyên bản; item_count=3, unique_url_count=2, duplicate indices=[0,1], source_counts={example:2,research.example.net:1}. Scorer chỉ chấm tên tool ở case này."
+      }
+    },
+    {
+      "id": "G02_single_web_news_year_limit",
+      "phase": "B",
+      "suite": "group",
+      "query": "Tìm trên web đúng 2 tin tức trong năm nay với từ khóa chính xác bằng tiếng Anh là 'multimodal agents'.",
+      "failure_type": "wrong_arg_value",
+      "expect": {"tool_calls": [{"name": "lookup", "args": {"query": "multimodal agents", "topic": "news", "timeframe": "year", "max_results": 2}}]},
+      "metadata": {"what_it_tests": "Ánh xạ năm nay sang year, giữ query tiếng Anh và số kết quả; không dùng timeframe mặc định week."}
+    },
+    {
+      "id": "G03_single_audit_missing_items",
+      "phase": "B",
+      "suite": "group",
+      "query": "Kiểm tra xem danh sách nguồn nghiên cứu của tôi có link trùng không. Tôi chưa gửi danh sách hoặc URL nào cho bạn.",
+      "failure_type": "missing_info",
+      "expect": {"tool_calls": [{"name": "clarify", "args": {"response_type": "text"}}]},
+      "metadata": {"what_it_tests": "Phải xin items còn thiếu cho tool mới; không tự dựng danh sách, không lấy items=[] làm dữ liệu chưa được cung cấp."}
+    },
+    {
+      "id": "G04_single_send_draft_confirmation",
+      "phase": "B",
+      "suite": "group",
+      "query": "Gửi nguyên văn bản nháp 'Bản tin thử nghiệm CR7: đã tổng hợp 2 nguồn về research agent.' lên private channel Telegram của nhóm. Đây là yêu cầu gửi mới, trước đó tôi chưa trả lời câu hỏi xác nhận nào.",
+      "failure_type": "wrong_boundary",
+      "expect": {"tool_calls": [{"name": "clarify", "args": {"response_type": "yes_no"}}]},
+      "metadata": {"what_it_tests": "Đã có nội dung cụ thể vẫn phải hỏi xác nhận trước send; tách khỏi trường hợp thiếu nội dung của R12 base."}
+    },
+    {
+      "id": "G05_single_format_existing_items",
+      "phase": "B",
+      "suite": "group",
+      "query": "Tạo thread được đánh số từ đúng 2 research items sau, chỉ trình bày dữ liệu có sẵn, không tìm hoặc đọc thêm URL: [{\"title\":\"Agent routing\",\"url\":\"https://example.org/routing\",\"summary\":\"Đo lựa chọn tool.\"},{\"title\":\"Source coverage\",\"url\":\"https://example.net/coverage\",\"summary\":\"Đếm số nguồn nghiên cứu.\"}].",
+      "failure_type": "wrong_tool",
+      "expect": {"tool_calls": [{"name": "format", "args": {"template": "thread"}}]},
+      "metadata": {
+        "what_it_tests": "Phân biệt format dữ liệu đã có với fetch/lookup/source_audit; chọn template thread.",
+        "manual_review": "Đối chiếu 2 items, URL và summary nguyên bản; item_count=2 và markdown có 1/, 2/. Scorer chỉ chấm routing và template."
+      }
+    },
+    {
+      "id": "G06_multi_source_audit_replace_items",
+      "phase": "B",
+      "suite": "group",
+      "turns": [
+        {"role": "user", "content": "Tôi định kiểm tra danh sách cũ này: [{\"url\":\"https://old.example.org/archive\"}]."},
+        {"role": "assistant", "content": "Bạn muốn kiểm tra link trùng trong danh sách này phải không?"},
+        {"role": "user", "content": "Bỏ hẳn danh sách cũ. Chỉ kiểm tra URL trùng và đếm nguồn cho danh sách mới sau, giữ đủ 3 item kể cả link lặp, không tìm thêm nguồn: [{\"url\":\"https://new.example.org/brief\"},{\"url\":\"https://second.example.net/study\"},{\"url\":\"https://new.example.org/brief#notes\"}]."}
+      ],
+      "failure_type": "wrong_arg_value",
+      "expect": {"tool_calls": [{"name": "source_audit", "args": {}}]},
+      "metadata": {
+        "what_it_tests": "Dùng items của lượt mới nhất, loại danh sách bị thay thế và giữ URL trùng cho source_audit.",
+        "manual_review": "Chỉ có 3 item mới; item_count=3, unique_url_count=2, duplicate indices=[0,2], source_counts={new.example.org:2,second.example.net:1}. Không có old.example.org. Scorer chỉ chấm tên tool."
+      }
+    },
+    {
+      "id": "G07_multi_change_news_filters",
+      "phase": "B",
+      "suite": "group",
+      "turns": [
+        {"role": "user", "content": "Tôi muốn tìm 6 tin tức trên web trong năm nay, từ khóa tiếng Anh chính xác 'agent safety'."},
+        {"role": "assistant", "content": "Bạn muốn giữ bộ lọc năm nay và số lượng 6 chứ?"},
+        {"role": "user", "content": "Đổi sang tháng này, chỉ lấy 2 kết quả. Giữ nguyên từ khóa tiếng Anh và vẫn chỉ tìm tin tức trên web."}
+      ],
+      "failure_type": "wrong_arg_value",
+      "expect": {"tool_calls": [{"name": "lookup", "args": {"query": "agent safety", "topic": "news", "timeframe": "month", "max_results": 2}}]},
+      "metadata": {"what_it_tests": "Ghi đè đồng thời timeframe year→month và số lượng 6→2, giữ chủ đề và topic=news từ ngữ cảnh."}
+    },
+    {
+      "id": "G08_multi_switch_latest_to_top",
+      "phase": "B",
+      "suite": "group",
+      "turns": [
+        {"role": "user", "content": "Tìm 7 bài mới nhất trên X theo từ khóa tiếng Anh chính xác 'tool calling'."},
+        {"role": "assistant", "content": "Bạn muốn ưu tiên bài mới nhất hay bài nổi bật?"},
+        {"role": "user", "content": "Đổi sang 2 bài nổi bật nhất (Top). Giữ nguyên từ khóa, không chuyển sang tìm web hay tài khoản cụ thể."}
+      ],
+      "failure_type": "wrong_arg_value",
+      "expect": {"tool_calls": [{"name": "social_search", "args": {"query": "tool calling", "search_type": "Top", "limit": 2}}]},
+      "metadata": {"what_it_tests": "Đổi search_type Latest→Top và limit 7→2 sau nhiều lượt, giữ query của lượt đầu; không dùng timeline/lookup."}
+    },
+    {
+      "id": "G09_multi_cancel_send",
+      "phase": "B",
+      "suite": "group",
+      "turns": [
+        {"role": "user", "content": "Tôi muốn gửi bản nháp 'Bản tin CR7: nghiên cứu về agent safety' lên private channel Telegram của nhóm."},
+        {"role": "assistant", "content": "Bạn xác nhận gửi nguyên văn 'Bản tin CR7: nghiên cứu về agent safety' lên private channel Telegram của nhóm không?"},
+        {"role": "user", "content": "Không. Hủy yêu cầu gửi, không đăng gì, không cần tìm hay trình bày thêm. Chỉ báo đã hủy là được."}
+      ],
+      "failure_type": "unnecessary_tool",
+      "expect": {"no_tool": true},
+      "metadata": {"what_it_tests": "Lượt từ chối/hủy cuối cùng phải dừng hành động gửi; không send, không hỏi xác nhận lặp hoặc gọi tool khác."}
+    },
+    {
+      "id": "G10_multi_audit_empty_items",
+      "phase": "B",
+      "suite": "group",
+      "turns": [
+        {"role": "user", "content": "Tôi muốn kiểm tra link trùng và số nguồn trong một danh sách research items."},
+        {"role": "assistant", "content": "Bạn gửi danh sách items cần kiểm tra nhé."},
+        {"role": "user", "content": "Danh sách hiện tại là [] thật, không phải thiếu dữ liệu. Hãy kiểm tra danh sách rỗng đó để trả về thống kê 0, không tìm thêm nguồn và không tự thêm item."}
+      ],
+      "failure_type": "wrong_tool",
+      "expect": {"tool_calls": [{"name": "source_audit", "args": {"items": []}}]},
+      "metadata": {
+        "what_it_tests": "Phân biệt danh sách rỗng được cung cấp rõ với chưa có items; tiếp tục yêu cầu sau lượt hỏi lại bằng source_audit(items=[]).",
+        "manual_review": "Output phải có item_count=0, unique_url_count=0, duplicate_urls=[], source_counts={}."
+      }
+    }
+  ]
 }
